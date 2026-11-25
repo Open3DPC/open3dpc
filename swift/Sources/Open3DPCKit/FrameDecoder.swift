@@ -1086,6 +1086,20 @@ final class Open3DPCFrameDecoder {
         else {
             return nil
         }
+        // A row of data cells can score as a side of the ring: it is straight, and it is material over
+        // most of the span. Only a frame side reaches its neighbours. Between a data row and the frame
+        // the format keeps an M/2 gap, so look there, at both ends of every side.
+        let sideEnds: [(x: Double, y: Double)] = [
+            (ring.left.position + leftThickness, ring.top.position), (ring.right.position - rightThickness, ring.top.position),
+            (ring.left.position + leftThickness, ring.bottom.position), (ring.right.position - rightThickness, ring.bottom.position),
+            (ring.left.position, ring.top.position + topThickness), (ring.left.position, ring.bottom.position - bottomThickness),
+            (ring.right.position, ring.top.position + topThickness), (ring.right.position, ring.bottom.position - bottomThickness),
+        ]
+        let joinedEnds = sideEnds.filter {
+            let brightness = image.brightness(x: $0.x, y: $0.y, span: probeSpan)
+            return ring.materialIsLight ? brightness > field($0.x, $0.y) : brightness < field($0.x, $0.y)
+        }.count
+        guard joinedEnds >= 7 else { return nil }
         // A real ring changes to its opposite material immediately inside every straight edge.
         // Sampling at 40% of the measured line thickness past the inner contour stays inside the
         // required M/2 quiet band while avoiding the orientation corner and ordinary modules.

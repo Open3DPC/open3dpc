@@ -88,6 +88,10 @@ detector proposes the card a code is printed on rather than the code, that
 boundary wins every time and the real frame a few dozen pixels inside is never
 considered. Enumerating lets the ring search step inward.
 
+*Why the ends of each side are checked:* a full row of dark cells is as straight as a side of the frame
+and nearly as long. But it stops at the `M/2` gap, and a frame side reaches its neighbours. A ring keeps
+its place only if at least seven of its eight side ends are material where that gap would be.
+
 *Why whole edges:* isolated modules, glyph strokes and a filled rectangle cannot
 score a four-sided ring with an opposite-colour interior.
 
@@ -195,29 +199,20 @@ unreliable on printed material. Stage 9 recovers the scale exactly; stages 7 and
 
 ## Known limits of the readers
 
-On perfect synthetic pictures the readers refuse some codes. They did not return a wrong payload in
-any of these tests. The two libraries share the sampler but not the rectangle detection: the Swift one
-uses Apple's Vision, the Kotlin one has its own, and they refuse different pictures.
+On perfect synthetic pictures the readers still refuse some codes. They did not return a wrong payload
+in any of these tests.
 
-The ten pictures in `spec/fixtures`, each at 0, 3, 5, 8, 12, 20 and 33 degrees:
+Of the ten pictures in `spec/fixtures`, each at 0, 3, 5, 8, 12, 20 and 33 degrees, the Swift reader reads
+eight at 7 of 7, 9999 on `4 × 6` at 6 and 38 bits on `10 × 5` at 5.
 
-| Picture | Swift | Kotlin |
-|---|---:|---:|
-| the number 1 on `4 × 6` | **0 of 7** | 7 of 7 |
-| 9999 on `4 × 6` | 6 of 7 | 7 of 7 |
-| nine bits on `2 × 7` | 6 of 7 | 7 of 7 |
-| 38 bits on `10 × 5` | 5 of 7 | 7 of 7 |
-| the other six | 7 of 7 | 7 of 7 |
-
-In Kotlin the number 1 drops to 3 of 7 when the picture is turned by 180 degrees; the other nine read
-7 of 7 at every quarter turn.
-
-- **Some payloads.** Given exact rasters with a half-module white margin, the sampler (measured in Swift)
-  refuses, of every 37th number from 1 to 9962 at fourteen bits (270 numbers per shape): 20 on `4 × 6`,
-  21 on `6 × 4`, 24 on `5 × 5`, 22 on `3 × 7`, 38 on `4 × 5`. Without the margin: 0, 0, 1, 3 and 2.
-- **Pixel-aligned pictures.** In Swift some codes that read at 3 to 20 degrees are refused at exactly 0.
-  A hand-held camera does not stay there.
+- **Some payloads.** Given exact rasters with a half-module white margin, the Swift sampler reads every
+  37th number from 1 to 9962 (270 numbers per shape) on `4 × 6`, `6 × 4` and `3 × 7`, and refuses one of
+  270 on `5 × 5` and on `4 × 5`.
+- **A dark column or row from edge to edge** leaves the count of rows (or columns) uncertain, because it
+  has no cell borders to count. In a live picture such a frame can be refused as ambiguous; the next one
+  usually settles it.
+- **Pixel-aligned pictures.** Some codes that read at 3 to 20 degrees are refused at exactly 0. A
+  hand-held camera does not stay there.
 - **Two-row codes** (`2 × W`) are refused by the Swift reader at some quarter turns.
 
-Until this is fixed, test every code you are about to print in quantity, or choose the shape by what
-reads.
+Test every code you are about to print in quantity.

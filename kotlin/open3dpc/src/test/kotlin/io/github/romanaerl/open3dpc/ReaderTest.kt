@@ -55,9 +55,6 @@ class ReaderTest {
     }
     private fun fixture(name: String) = fixtures.first { it.file == "$name.pgm" }
 
-    /** Codes the sampler is known to refuse: "Known limits of the readers" in docs/reader-pipeline.md. */
-    private val refused = setOf("number-1-4x6.pgm")
-
     /** Every picture the generator drew, at seven angles and four turns; a wrong payload is never allowed. */
     @Test fun generatedCodesRead() {
         assertEquals(10, fixtures.size)
@@ -71,7 +68,7 @@ class ReaderTest {
                     if (found.size == 1) read++
                 }
                 println("read ${f.file} turn ${turn * 90}: $read of 7")
-                if (f.file !in refused && f.rows > 2) assertTrue("${f.file} turn ${turn * 90}: $read of 7", read >= 4)
+                if (f.rows > 2) assertTrue("${f.file} turn ${turn * 90}: $read of 7", read >= 4)
                 image = image.quarter()
             }
         }
@@ -139,5 +136,19 @@ class ReaderTest {
         assertArrayEquals(byteArrayOf(10, 20, 11, 21, 12, 22, 13, 23), frame.chroma)
         val planar = Open3DPCFrame.fromYuv420(4, 4, y, 6, ByteBuffer.wrap(byteArrayOf(1, 2, 3, 4)), ByteBuffer.wrap(byteArrayOf(5, 6, 7, 8)), 2, 1)
         assertArrayEquals(byteArrayOf(1, 5, 2, 6, 3, 7, 4, 8), planar.chroma)
+    }
+
+    /** A dark data row or column is as long as a side of the frame and must not be taken for one. */
+    @Test fun dataRowsAreNotFrameSides() {
+        for ((rows, columns) in listOf(4 to 6, 6 to 4, 3 to 7)) for (number in 1..9999 step 37) {
+            val payload = number.toString(2).padStart(14, '0')
+            val code = ReferenceRaster.render(Open3DPC.encode(payload, rows, columns), 24)
+            val pad = 12
+            val width = code.width + 2 * pad
+            val height = code.height + 2 * pad
+            val pixels = ByteArray(width * height * 4) { -1 }
+            for (y in 0 until code.height) System.arraycopy(code.rgba, y * code.width * 4, pixels, ((y + pad) * width + pad) * 4, code.width * 4)
+            assertEquals("$number on $rows x $columns", payload, LatticeSampler.analyze(Raster(pixels, width, height, width * 4)).payload)
+        }
     }
 }

@@ -243,6 +243,14 @@ internal object LatticeSampler {
             if (maxOf(leftThickness, rightThickness, max(topThickness, bottomThickness)) > maximumThinFrame ||
                 abs(leftThickness - rightThickness) / max(leftThickness, rightThickness) > maximumThicknessDisparity ||
                 abs(topThickness - bottomThickness) / max(topThickness, bottomThickness) > maximumThicknessDisparity) return null
+            // A row of data cells can score as a side of the ring. Only a frame side reaches its neighbours:
+            // between a data row and the frame the format keeps an M/2 gap, so look there.
+            val l = ring.left.position; val r = ring.right.position; val u = ring.top.position; val d = ring.bottom.position
+            val sideEnds = listOf(
+                l + leftThickness to u, r - rightThickness to u, l + leftThickness to d, r - rightThickness to d,
+                l to u + topThickness, l to d - bottomThickness, r to u + topThickness, r to d - bottomThickness,
+            )
+            if (sideEnds.count { (x, y) -> material(x, y, probeSpan, ring.materialIsLight) } < 7) return null
             var backgrounds = 0
             var total = 0
             for (fraction in doubleArrayOf(0.22, 0.36, 0.50, 0.64, 0.78)) {

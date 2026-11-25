@@ -17,8 +17,6 @@ final class ReaderTests: XCTestCase {
         XCTAssertEqual(readings.map(\.bits), [payload], label, file: file, line: line)
     }
 
-    /// Codes the sampler is known to refuse: see "Known limits of the readers" in docs/reader-pipeline.md.
-    private let refused: Set<String> = ["number-1-4x6.pgm"]
     private let angles = [0.0, 3, 5, 8, 12, 20, 33]
 
     /// Every picture the generator drew, at seven angles. A single frame may be refused, so a code has
@@ -32,13 +30,13 @@ final class ReaderTests: XCTestCase {
                 if found == [fixture.payload] { read += 1 }
             }
             print("read \(fixture.file): \(read) of \(angles.count)")
-            if !refused.contains(fixture.file) { XCTAssertGreaterThanOrEqual(read, 4, fixture.file) }
+            XCTAssertGreaterThanOrEqual(read, 4, fixture.file)
         }
     }
 
     /// Two-row codes are left out: the sampler refuses this one at some quarter turns.
     func testGeneratedCodesReadInEveryRotation() throws {
-        for (fixture, image) in try fixtures() where !refused.contains(fixture.file) && fixture.h > 2 {
+        for (fixture, image) in try fixtures() where fixture.h > 2 {
             var turned = [3.0, 8, 12].map { image.turned(degrees: $0) }
             for turn in 1...3 {
                 turned = turned.map { $0.rotated() }
@@ -109,6 +107,24 @@ final class ReaderTests: XCTestCase {
                     expectedStage: .validated, expectedGeometry: nil, expectedPayload: nil
                 ))
                 XCTAssertEqual(outcome.payload, bits(payload), "\(payload) at \(module) px: \(outcome.detail)")
+            }
+        }
+    }
+
+    /// A dark data row or column is as long as a side of the frame and must not be taken for one.
+    func testDataRowsAreNotFrameSides() throws {
+        for (height, width) in [(4, 6), (6, 4), (3, 7)] {
+            for number in stride(from: 1, through: 9999, by: 37 * 5) {
+                let payload = bits(String(repeating: "0", count: 14 - String(number, radix: 2).count) + String(number, radix: 2))
+                let matrix = try XCTUnwrap(Open3DPC.encode(payload: payload, geometry: .init(height: height, width: width)))
+                let code = Grey(matrix, module: 24)
+                var raster = Grey(width: code.width + 24, height: code.height + 24)
+                for y in 0..<code.height { for x in 0..<code.width { raster.pixels[(y + 12) * raster.width + x + 12] = code.pixels[y * code.width + x] } }
+                let outcome = Open3DPCFrameDecoder().analyzeFixture(.init(
+                    id: "", width: raster.width, height: raster.height, rgba: raster.rgba,
+                    expectedStage: .validated, expectedGeometry: nil, expectedPayload: nil
+                ))
+                XCTAssertEqual(outcome.payload, payload, "\(number) on \(height)×\(width): \(outcome.detail)")
             }
         }
     }
