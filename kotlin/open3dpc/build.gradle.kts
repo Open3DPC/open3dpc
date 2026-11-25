@@ -23,5 +23,5 @@ tasks.test {
     val specification = rootProject.file("../spec")
     inputs.dir(specification)
     systemProperty("open3dpc.spec", specification.path)
-    testLogging { events("failed"); showStandardStreams = false }
+    testLogging { events("passed", "failed"); showStandardStreams = true }
 }
