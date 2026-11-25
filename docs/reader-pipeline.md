@@ -230,7 +230,7 @@ all ten at 7 of 7.
 
 - **Two-row codes can be misread.** Their checksum has two bits. On 448 synthetic pictures of `2 × 9` the Swift
   reader took two for `2 × 11`; on four lab pictures (two pairs of the same two) the JavaScript reader took
-  `2 × 6` for `2 × 8`, and so would the Kotlin one.
+  `2 × 6` for `2 × 8`. The Kotlin reader shares its method and was not run on them.
 - **An all-zero payload** leaves few dark cells: 14 zero bits on `4 × 6` are refused.
 
 Test every code you are about to print in quantity.
