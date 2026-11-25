@@ -1,5 +1,5 @@
 {
-    "note": "Output of an independent PHP implementation of the same format. svgSha256: the SVG; stlBodySha256: the STL without its 80-byte header.",
+    "note": "Output of the PHP generator this one was ported from. svgSha256: the SVG; stlBodySha256: the STL without its 80-byte header.",
     "cases": [
         {
             "id": "h1w5-full",

@@ -192,3 +192,19 @@ A CRC cannot notice a neighbouring code, which is a perfectly valid one.
 
 The pre-geometry gates derive the module as twice the measured frame thickness, which is
 unreliable on printed material. Stage 9 recovers the scale exactly; stages 7 and 8 do not.
+
+## Known limits of the readers
+
+On perfect synthetic pictures the readers refuse some codes. They did not return a wrong payload in
+any of these tests.
+
+- **Some payloads.** For the Swift sampler, on exact rasters with a half-module white margin, every 37th
+  number from 1 to 9962 (270 numbers per shape) at fourteen bits: 20 refused on `4 × 6`, 21 on `6 × 4`,
+  24 on `5 × 5`, 22 on `3 × 7`, 38 on `4 × 5`. Without the margin: 0, 0, 1, 3 and 2. The same payload in
+  another shape is usually read. The number 1 on `4 × 6` was not read at any angle tried.
+- **Pixel-aligned pictures.** Some codes that read at 3° to 20° are refused at exactly 0°. A hand-held
+  camera does not stay there.
+- **Two-row codes** (`2 × W`) are refused at some quarter turns.
+
+Until this is fixed, test every code you are about to print in quantity, or choose the shape by what
+reads.

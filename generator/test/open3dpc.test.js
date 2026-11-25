@@ -59,7 +59,7 @@ test('bad input is refused', () => {
   assert.equal(o.bitsFromInteger('1', 14), '00000000000001');
   assert.equal(o.decode(['001', '010']).error, 'invalid_orientation');
 });
-test('matrix, SVG and STL equal the independent PHP implementation byte for byte', () => {
+test('matrix, SVG and STL equal the original PHP generator byte for byte', () => {
   assert.equal(golden.cases.length, 35);
   for (const g of golden.cases) {
     const code = o.encode(g.payload, g.h, g.w);
@@ -70,7 +70,7 @@ test('matrix, SVG and STL equal the independent PHP implementation byte for byte
     assert.equal(sha(mesh.subarray(80)), g.stlBodySha256, `${g.id} stl`);
   }
 });
-test('geometry candidates equal the PHP implementation', () => {
+test('geometry candidates equal the original PHP generator', () => {
   for (const g of golden.candidates)
     assert.deepEqual(o.candidates(g.bits, { maximumRows: 10, maximumColumns: 10 }).map(({ h, w }) => `${h}x${w}`), g.geometries, `${g.bits} bits`);
 });
