@@ -1,0 +1,820 @@
+{
+    "format": "open3dpc",
+    "version": 2,
+    "fullPolynomials": {
+        "1": "0x3",
+        "2": "0x7",
+        "3": "0xB",
+        "4": "0x13",
+        "5": "0x25",
+        "6": "0x67",
+        "7": "0xCB",
+        "8": "0x107",
+        "9": "0x2FB",
+        "10": "0x48F"
+    },
+    "vectors": [
+        {
+            "id": "h1w5-full",
+            "h": 1,
+            "w": 5,
+            "payload": "10",
+            "payloadLength": 2,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "101",
+            "crcInput": "101",
+            "expectedCrc": "0",
+            "encodedBits": "1010",
+            "matrixRows": [
+                "O1010"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                4.8
+            ]
+        },
+        {
+            "id": "h1w5-short",
+            "h": 1,
+            "w": 5,
+            "payload": "1",
+            "payloadLength": 1,
+            "terminator": "1",
+            "padding": "0",
+            "dataRegion": "110",
+            "crcInput": "110",
+            "expectedCrc": "0",
+            "encodedBits": "1100",
+            "matrixRows": [
+                "O1100"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                4.8
+            ]
+        },
+        {
+            "id": "h2w4-full",
+            "h": 2,
+            "w": 4,
+            "payload": "1010",
+            "payloadLength": 4,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101",
+            "crcInput": "10101",
+            "expectedCrc": "00",
+            "encodedBits": "1010100",
+            "matrixRows": [
+                "O100",
+                "1010"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                6.4
+            ]
+        },
+        {
+            "id": "h2w4-short",
+            "h": 2,
+            "w": 4,
+            "payload": "1",
+            "payloadLength": 1,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "11000",
+            "crcInput": "11000",
+            "expectedCrc": "10",
+            "encodedBits": "1100010",
+            "matrixRows": [
+                "O111",
+                "0000"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                6.4
+            ]
+        },
+        {
+            "id": "h3w4-full",
+            "h": 3,
+            "w": 4,
+            "payload": "1010101",
+            "payloadLength": 7,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101011",
+            "crcInput": "10101011",
+            "expectedCrc": "001",
+            "encodedBits": "10101011001",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0111"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                8
+            ]
+        },
+        {
+            "id": "h3w4-short",
+            "h": 3,
+            "w": 4,
+            "payload": "1010",
+            "payloadLength": 4,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101000",
+            "crcInput": "10101000",
+            "expectedCrc": "100",
+            "encodedBits": "10101000100",
+            "matrixRows": [
+                "O101",
+                "1010",
+                "0000"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                8
+            ]
+        },
+        {
+            "id": "h4w4-full",
+            "h": 4,
+            "w": 4,
+            "payload": "1010101010",
+            "payloadLength": 10,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101",
+            "crcInput": "10101010101",
+            "expectedCrc": "1011",
+            "encodedBits": "101010101011011",
+            "matrixRows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                9.6
+            ]
+        },
+        {
+            "id": "h4w4-short",
+            "h": 4,
+            "w": 4,
+            "payload": "1010101",
+            "payloadLength": 7,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101011000",
+            "crcInput": "10101011000",
+            "expectedCrc": "1111",
+            "encodedBits": "101010110001111",
+            "matrixRows": [
+                "O101",
+                "1011",
+                "0111",
+                "0001"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                9.6
+            ]
+        },
+        {
+            "id": "h5w4-full",
+            "h": 5,
+            "w": 4,
+            "payload": "1010101010101",
+            "payloadLength": 13,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101011",
+            "crcInput": "10101010101011",
+            "expectedCrc": "11000",
+            "encodedBits": "1010101010101111000",
+            "matrixRows": [
+                "O101",
+                "1011",
+                "0100",
+                "1010",
+                "0110"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                11.2
+            ]
+        },
+        {
+            "id": "h5w4-short",
+            "h": 5,
+            "w": 4,
+            "payload": "1010101010",
+            "payloadLength": 10,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101000",
+            "crcInput": "10101010101000",
+            "expectedCrc": "10111",
+            "encodedBits": "1010101010100010111",
+            "matrixRows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011",
+                "0001"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                11.2
+            ]
+        },
+        {
+            "id": "h6w4-full",
+            "h": 6,
+            "w": 4,
+            "payload": "1010101010101010",
+            "payloadLength": 16,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101010101",
+            "crcInput": "10101010101010101",
+            "expectedCrc": "011010",
+            "encodedBits": "10101010101010101011010",
+            "matrixRows": [
+                "O100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                12.8
+            ]
+        },
+        {
+            "id": "h6w4-short",
+            "h": 6,
+            "w": 4,
+            "payload": "1010101010101",
+            "payloadLength": 13,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101011000",
+            "crcInput": "10101010101011000",
+            "expectedCrc": "000101",
+            "encodedBits": "10101010101011000000101",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0100",
+                "1011",
+                "0110",
+                "0001"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                12.8
+            ]
+        },
+        {
+            "id": "h7w4-full",
+            "h": 7,
+            "w": 4,
+            "payload": "1010101010101010101",
+            "payloadLength": 19,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101010101011",
+            "crcInput": "10101010101010101011",
+            "expectedCrc": "0000010",
+            "encodedBits": "101010101010101010110000010",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0100",
+                "1010",
+                "0100",
+                "1011",
+                "0110"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                14.4
+            ]
+        },
+        {
+            "id": "h7w4-short",
+            "h": 7,
+            "w": 4,
+            "payload": "1010101010101010",
+            "payloadLength": 16,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101010101000",
+            "crcInput": "10101010101010101000",
+            "expectedCrc": "0010100",
+            "encodedBits": "101010101010101010000010100",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0000"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                14.4
+            ]
+        },
+        {
+            "id": "h8w4-full",
+            "h": 8,
+            "w": 4,
+            "payload": "1010101010101010101010",
+            "payloadLength": 22,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101010101010101",
+            "crcInput": "10101010101010101010101",
+            "expectedCrc": "00000101",
+            "encodedBits": "1010101010101010101010100000101",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0100",
+                "1010",
+                "0100",
+                "1011",
+                "0100",
+                "1011"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                16
+            ]
+        },
+        {
+            "id": "h8w4-short",
+            "h": 8,
+            "w": 4,
+            "payload": "1010101010101010101",
+            "payloadLength": 19,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101010101011000",
+            "crcInput": "10101010101010101011000",
+            "expectedCrc": "00100110",
+            "encodedBits": "1010101010101010101100000100110",
+            "matrixRows": [
+                "O100",
+                "1010",
+                "0101",
+                "1010",
+                "0100",
+                "1011",
+                "0111",
+                "0000"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                16
+            ]
+        },
+        {
+            "id": "h9w4-full",
+            "h": 9,
+            "w": 4,
+            "payload": "1010101010101010101010101",
+            "payloadLength": 25,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101010101010101011",
+            "crcInput": "10101010101010101010101011",
+            "expectedCrc": "010110111",
+            "encodedBits": "10101010101010101010101011010110111",
+            "matrixRows": [
+                "O100",
+                "1011",
+                "0100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1011",
+                "0111"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                17.6
+            ]
+        },
+        {
+            "id": "h9w4-short",
+            "h": 9,
+            "w": 4,
+            "payload": "1010101010101010101010",
+            "payloadLength": 22,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101010101010101000",
+            "crcInput": "10101010101010101010101000",
+            "expectedCrc": "110111010",
+            "encodedBits": "10101010101010101010101000110111010",
+            "matrixRows": [
+                "O101",
+                "1011",
+                "0100",
+                "1011",
+                "0101",
+                "1011",
+                "0100",
+                "1011",
+                "0000"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                17.6
+            ]
+        },
+        {
+            "id": "h10w4-full",
+            "h": 10,
+            "w": 4,
+            "payload": "1010101010101010101010101010",
+            "payloadLength": 28,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101010101010101010101",
+            "crcInput": "10101010101010101010101010101",
+            "expectedCrc": "0110101111",
+            "encodedBits": "101010101010101010101010101010110101111",
+            "matrixRows": [
+                "O100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0101",
+                "1011",
+                "0101",
+                "1011"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                19.2
+            ]
+        },
+        {
+            "id": "h10w4-short",
+            "h": 10,
+            "w": 4,
+            "payload": "1010101010101010101010101",
+            "payloadLength": 25,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "10101010101010101010101011000",
+            "crcInput": "10101010101010101010101011000",
+            "expectedCrc": "1111101011",
+            "encodedBits": "101010101010101010101010110001111101011",
+            "matrixRows": [
+                "O101",
+                "1011",
+                "0101",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0111",
+                "0001"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                19.2
+            ]
+        },
+        {
+            "id": "h11w19-full",
+            "h": 11,
+            "w": 19,
+            "payload": "10101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+            "payloadLength": 197,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101011",
+            "crcInput": "101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101011",
+            "expectedCrc": "0110111100",
+            "encodedBits": "1010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010110110111100",
+            "matrixRows": [
+                "O101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101011"
+            ],
+            "physicalDimensionsMm": [
+                33.6,
+                20.8
+            ]
+        },
+        {
+            "id": "h11w19-short",
+            "h": 11,
+            "w": 19,
+            "payload": "10101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010",
+            "payloadLength": 194,
+            "terminator": "1",
+            "padding": "000",
+            "dataRegion": "101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101000",
+            "crcInput": "101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101000",
+            "expectedCrc": "0000101101",
+            "encodedBits": "1010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010000000101101",
+            "matrixRows": [
+                "O101010101010101010",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101000"
+            ],
+            "physicalDimensionsMm": [
+                33.6,
+                20.8
+            ]
+        },
+        {
+            "id": "h4w4-zero",
+            "h": 4,
+            "w": 4,
+            "payload": "0000000000",
+            "payloadLength": 10,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "00000000001",
+            "crcInput": "00000000001",
+            "expectedCrc": "0011",
+            "encodedBits": "000000000010011",
+            "matrixRows": [
+                "O000",
+                "0000",
+                "0001",
+                "0011"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                9.6
+            ]
+        },
+        {
+            "id": "h4w4-one",
+            "h": 4,
+            "w": 4,
+            "payload": "1111111111",
+            "payloadLength": 10,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "11111111111",
+            "crcInput": "11111111111",
+            "expectedCrc": "1111",
+            "encodedBits": "111111111111111",
+            "matrixRows": [
+                "O111",
+                "1111",
+                "1111",
+                "1111"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                9.6
+            ]
+        },
+        {
+            "id": "h4w4-alt",
+            "h": 4,
+            "w": 4,
+            "payload": "1010101010",
+            "payloadLength": 10,
+            "terminator": "1",
+            "padding": "",
+            "dataRegion": "10101010101",
+            "crcInput": "10101010101",
+            "expectedCrc": "1011",
+            "encodedBits": "101010101011011",
+            "matrixRows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011"
+            ],
+            "physicalDimensionsMm": [
+                9.6,
+                9.6
+            ]
+        },
+        {
+            "id": "h2w7-empty-payload",
+            "h": 2,
+            "w": 7,
+            "payload": "",
+            "payloadLength": 0,
+            "terminator": "1",
+            "padding": "0000000000",
+            "dataRegion": "10000000000",
+            "crcInput": "10000000000",
+            "expectedCrc": "01",
+            "encodedBits": "1000000000001",
+            "matrixRows": [
+                "O100000",
+                "0000001"
+            ],
+            "physicalDimensionsMm": [
+                14.4,
+                6.4
+            ]
+        },
+        {
+            "id": "h3w5-short-a",
+            "h": 3,
+            "w": 5,
+            "payload": "010000000",
+            "payloadLength": 9,
+            "terminator": "1",
+            "padding": "0",
+            "dataRegion": "01000000010",
+            "crcInput": "01000000010",
+            "expectedCrc": "001",
+            "encodedBits": "01000000010001",
+            "matrixRows": [
+                "O0100",
+                "00000",
+                "00101"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                8
+            ]
+        },
+        {
+            "id": "h3w5-short-b",
+            "h": 3,
+            "w": 5,
+            "payload": "010001000",
+            "payloadLength": 9,
+            "terminator": "1",
+            "padding": "0",
+            "dataRegion": "01000100010",
+            "crcInput": "01000100010",
+            "expectedCrc": "011",
+            "encodedBits": "01000100010011",
+            "matrixRows": [
+                "O0100",
+                "00101",
+                "00101"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                8
+            ]
+        },
+        {
+            "id": "h3w5-short-c",
+            "h": 3,
+            "w": 5,
+            "payload": "010011011",
+            "payloadLength": 9,
+            "terminator": "1",
+            "padding": "0",
+            "dataRegion": "01001101110",
+            "crcInput": "01001101110",
+            "expectedCrc": "101",
+            "encodedBits": "01001101110101",
+            "matrixRows": [
+                "O0101",
+                "01100",
+                "11101"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                8
+            ]
+        },
+        {
+            "id": "h3w5-short-d",
+            "h": 3,
+            "w": 5,
+            "payload": "010111100",
+            "payloadLength": 9,
+            "terminator": "1",
+            "padding": "0",
+            "dataRegion": "01011110010",
+            "crcInput": "01011110010",
+            "expectedCrc": "101",
+            "encodedBits": "01011110010101",
+            "matrixRows": [
+                "O0101",
+                "11110",
+                "00101"
+            ],
+            "physicalDimensionsMm": [
+                11.2,
+                8
+            ]
+        }
+    ],
+    "additionalCrcCases": [
+        {
+            "h": 1,
+            "dataRegion": "00",
+            "expectedCrc": "0",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 2,
+            "dataRegion": "00000",
+            "expectedCrc": "00",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 3,
+            "dataRegion": "00000000",
+            "expectedCrc": "000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 4,
+            "dataRegion": "00000000000",
+            "expectedCrc": "0000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 5,
+            "dataRegion": "00000000000000",
+            "expectedCrc": "00000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 6,
+            "dataRegion": "00000000000000000",
+            "expectedCrc": "000000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 7,
+            "dataRegion": "00000000000000000000",
+            "expectedCrc": "0000000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 8,
+            "dataRegion": "00000000000000000000000",
+            "expectedCrc": "00000000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 9,
+            "dataRegion": "00000000000000000000000000",
+            "expectedCrc": "000000000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        },
+        {
+            "h": 10,
+            "dataRegion": "00000000000000000000000000000",
+            "expectedCrc": "0000000000",
+            "note": "all-zero region: CRC arithmetic only; a scanner rejects it as emptyDataRegion"
+        }
+    ],
+    "negativeCases": {
+        "rotations": [
+            90,
+            180,
+            270
+        ],
+        "invertedModule": true,
+        "incorrectCrc": true,
+        "truncatedFrame": true,
+        "emptyDataRegion": true,
+        "payloadOverflow": true
+    }
+}
