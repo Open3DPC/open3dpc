@@ -70,3 +70,10 @@ const code = encode('10011100001111', 4, 6);
   const [w, h] = [grid[0].length, grid.length];
   out('logo.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${w + 2} ${h + 2}" width="${(w + 2) * 16}" height="${(h + 2) * 16}" shape-rendering="crispEdges" role="img" aria-label="Open3DPC logo: an Open3DPC code whose cells spell 3DPC"><path fill="#fff" d="M-1-1h${w + 2}v${h + 2}H-1z"/><path fill="#111" d="${path}"/></svg>`);
 }
+
+// The icon: the number 0 in ten bits on 4 × 4, a code that can be scanned.
+{
+  const cells = encode('0'.repeat(10), 4, 4).rows;
+  const path = cells.map((row, r) => [...row].map((c, x) => (c === '1' ? `M${2 * x + 2} ${2 * r + 2}h2v2h-2z` : '')).join('')).join('');
+  out('icon.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 14 14" width="448" height="448" shape-rendering="crispEdges" role="img" aria-label="Open3DPC icon: the number 0 as a code"><path fill="#fff" d="M-1-1h14v14H-1z"/><path fill="#111" fill-rule="evenodd" d="M0 0h12v12H0zM1 1v10h10V1z"/><path fill="#111" d="M1 1h2v2H1z${path}"/></svg>`);
+}
