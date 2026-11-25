@@ -2,7 +2,7 @@
 
 The format is permissive about what a code may look like, so the reader carries the
 burden of proving that a rectangle in a camera frame really is one. This is the
-sequence both libraries follow, and why each stage exists. Cheap, scale-free evidence
+sequence the libraries follow, and why each stage exists. Cheap, scale-free evidence
 runs first; anything that costs a render runs only on what survives.
 
 The numbers below are the constants in the code. Where a number is called measured, it

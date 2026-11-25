@@ -10,6 +10,7 @@ An open two-colour code for FDM 3D printers, read by a phone camera.</p>
 <a href="docs/concept.md">Concept</a> ·
 <a href="spec/v2.md">Specification</a> ·
 <a href="generator/">Generator</a> ·
+<a href="docs/web.md">Web</a> ·
 <a href="docs/ios.md">iOS</a> ·
 <a href="docs/android.md">Android</a> ·
 <a href="CONTRIBUTING.md">Contributing</a>
@@ -59,6 +60,14 @@ stl(code, { materialHeight: 0.6 });                     // Uint8Array, the dark 
 
 ## Read a code
 
+In a browser, nothing to install: the [scanner page](generator/scan/) opens the phone's camera and reads.
+JavaScript, with no dependencies ([guide](docs/web.md)):
+
+```js
+const reader = new Open3DPCReader({ payloadLengths: [14] });
+reader.read(Frame.fromImageData(imageData))[0]?.value;   // 9999n
+```
+
 Swift, iOS 15 and later ([guide](docs/ios.md), [camera example](examples/ios/Open3DPCScannerView.swift)):
 
 ```swift
@@ -77,8 +86,8 @@ val stabilizer = Open3DPCStabilizer()
 stabilizer.observe(reader.read(frame, viewfinder), nowMs)?.let { println(it.value) }   // 9999
 ```
 
-Neither needs a vision library of its own: the Swift reader uses Apple's Vision, the Kotlin one finds
-its own rectangles.
+None needs a vision library of its own: the Swift reader uses Apple's Vision, the others find
+their own rectangles.
 
 ## What is here
 
@@ -86,7 +95,7 @@ its own rectangles.
 |---|---|
 | [docs/concept.md](docs/concept.md) | What Open3DPC is, why, and the comparison with QR, Micro QR and Data Matrix |
 | [spec/](spec/) | The specification, v2, with [test vectors](spec/vectors/v2.json) |
-| [generator/](generator/) | The generator page and the encoder it is built on |
+| [generator/](generator/) | The generator page, the [browser scanner](generator/scan/) ([guide](docs/web.md)) and the JavaScript under both |
 | [swift/](swift/) | `Open3DPCKit`, the Swift package ([guide](docs/ios.md)) |
 | [kotlin/](kotlin/) | The Kotlin library ([guide](docs/android.md)) |
 | [examples/](examples/) | Minimal camera scanners for both |

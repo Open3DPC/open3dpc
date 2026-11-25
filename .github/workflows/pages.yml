@@ -21,7 +21,7 @@ jobs:
         working-directory: generator
       - run: |
           mkdir site
-          cp generator/index.html generator/style.css generator/page.js generator/open3dpc.js site/
+          cp -R generator/*.html generator/*.css generator/*.js generator/scan site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
