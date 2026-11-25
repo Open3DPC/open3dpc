@@ -5,7 +5,7 @@ import { Open3DPCStabilizer } from '../open3dpc-reader.js';
 import { phoneBlock } from '../phone.js';
 
 const $ = (id) => document.getElementById(id);
-const [scanner, video, overlay, finder] = ['scanner', 'video', 'overlay', 'finder'].map($);
+const [scanner, video, still, overlay, finder] = ['scanner', 'video', 'still', 'overlay', 'finder'].map($);
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d', { willReadFrequently: true });
 const stabilizer = new Open3DPCStabilizer({ consistencyMs: 1000, retentionMs: 1000 }); // a slow phone reads few frames a second
@@ -15,6 +15,8 @@ const worker = new Worker(new URL('./worker.js', import.meta.url), { type: 'modu
 const FINDER_PIXELS = 720;
 /** Around the viewfinder, so that a code near its edge still has its quiet zone. */
 const MARGIN = 0.12;
+/** Reads start no more often than this: enough to feel instant, and the phone stays cool. */
+const READ_INTERVAL_MS = 80;
 
 let stream = null;
 let busy = false;
@@ -70,12 +72,18 @@ async function start() {
   }
 }
 
-function stop() {
+/** Turns the camera off; what is on the screen stays. */
+function release() {
   session++;
   stream?.getTracks().forEach((track) => track.stop());
   stream = null;
   video.srcObject = null;
   $('tools').hidden = true;
+}
+
+function stop() {
+  release();
+  still.hidden = true;
   clear();
   state('idle');
 }
@@ -83,7 +91,9 @@ function stop() {
 function resume() {
   stabilizer.reset();
   $('result').hidden = true;
-  state(stream ? 'live' : 'idle');
+  still.hidden = true;
+  clear();
+  state('live');
 }
 
 /** Light and zoom, where the camera has them. */
@@ -128,9 +138,12 @@ function grab() {
   const x1 = Math.min(video.videoWidth, left + side * (1 + MARGIN));
   const y1 = Math.min(video.videoHeight, top + side * (1 + MARGIN));
   const shrink = Math.min(1, FINDER_PIXELS / side);
+  // The whole picture too: after a reading the screen shows the frame the outline belongs to.
+  if (still.width !== video.videoWidth || still.height !== video.videoHeight) { still.width = video.videoWidth; still.height = video.videoHeight; }
+  still.getContext('2d').drawImage(video, 0, 0);
   canvas.width = Math.round((x1 - x0) * shrink);
   canvas.height = Math.round((y1 - y0) * shrink);
-  context.drawImage(video, x0, y0, x1 - x0, y1 - y0, 0, 0, canvas.width, canvas.height);
+  context.drawImage(still, x0, y0, x1 - x0, y1 - y0, 0, 0, canvas.width, canvas.height);
   const roi = { left: (left - x0) * shrink, top: (top - y0) * shrink, right: (left + side - x0) * shrink, bottom: (top + side - y0) * shrink };
   const factor = view.scale / shrink;
   return { image: context.getImageData(0, 0, canvas.width, canvas.height), roi, map: ({ x, y }) => ({ x: x * factor + x0 * view.scale + view.x, y: y * factor + y0 * view.scale + view.y }) };
@@ -140,10 +153,13 @@ const nextFrame = () => new Promise((resolve) => (video.requestVideoFrameCallbac
 
 async function loop(mine) {
   let started = performance.now();
+  let readAt = 0;
   while (mine === session) {
     await nextFrame();
     if (mine !== session) return;
     if (scanner.dataset.state !== 'live' || busy || video.videoWidth === 0) { started = performance.now(); continue; }
+    if (performance.now() - readAt < READ_INTERVAL_MS) continue;
+    readAt = performance.now();
     busy = true;
     try {
       const { image, roi, map } = grab();
@@ -151,7 +167,7 @@ async function loop(mine) {
       if (mine !== session || scanner.dataset.state !== 'live') continue;
       outline(readings, map);
       const code = stabilizer.observe(readings, performance.now());
-      if (code) { show(code); started = performance.now(); } else {
+      if (code) { found(code); } else {
         $('hint').textContent = readings.length > 1 ? 'Show one code at a time'
           : performance.now() - started > 6000 ? 'Move closer or further, and avoid glare' : 'Fit the code inside the square';
       }
@@ -189,7 +205,14 @@ function show({ bits, value, rows, columns }) {
   $('copy').textContent = 'Copy';
   $('copy').onclick = async () => { try { await navigator.clipboard.writeText(text); $('copy').textContent = 'Copied'; } catch { $('copy').textContent = 'Could not copy'; } };
   $('result').hidden = false;
-  if (stream) state('found');
+}
+
+/** The reading, over the picture it came from; the camera is off until "Scan again". */
+function found(code) {
+  still.hidden = false;
+  release();
+  state('found');
+  show(code);
 }
 
 async function photo(file) {
@@ -219,7 +242,7 @@ async function photo(file) {
 
 $('sample').innerHTML = svg(encode(bitsFromInteger(4242, 14), 4, 6), { quietZone: true });
 $('start').addEventListener('click', start);
-$('again').addEventListener('click', () => { clear(); resume(); });
+$('again').addEventListener('click', () => { if (scanner.dataset.state === 'found') start(); else $('result').hidden = true; });
 $('photo').addEventListener('change', ({ target }) => { if (target.files[0]) photo(target.files[0]); target.value = ''; });
 // A page in the background loses the camera anyway; give it back cleanly.
 document.addEventListener('visibilitychange', () => { if (document.hidden && stream) stop(); });
