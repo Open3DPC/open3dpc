@@ -138,12 +138,13 @@ function grab() {
   const x1 = Math.min(video.videoWidth, left + side * (1 + MARGIN));
   const y1 = Math.min(video.videoHeight, top + side * (1 + MARGIN));
   const shrink = Math.min(1, FINDER_PIXELS / side);
-  // The whole picture too: after a reading the screen shows the frame the outline belongs to.
+  // The whole picture too: after a reading the screen shows the frame the outline belongs to. Both are drawn
+  // from the video in one task, so they are the same frame; reading the large canvas back would cost a copy of it.
   if (still.width !== video.videoWidth || still.height !== video.videoHeight) { still.width = video.videoWidth; still.height = video.videoHeight; }
   still.getContext('2d').drawImage(video, 0, 0);
   canvas.width = Math.round((x1 - x0) * shrink);
   canvas.height = Math.round((y1 - y0) * shrink);
-  context.drawImage(still, x0, y0, x1 - x0, y1 - y0, 0, 0, canvas.width, canvas.height);
+  context.drawImage(video, x0, y0, x1 - x0, y1 - y0, 0, 0, canvas.width, canvas.height);
   const roi = { left: (left - x0) * shrink, top: (top - y0) * shrink, right: (left + side - x0) * shrink, bottom: (top + side - y0) * shrink };
   const factor = view.scale / shrink;
   return { image: context.getImageData(0, 0, canvas.width, canvas.height), roi, map: ({ x, y }) => ({ x: x * factor + x0 * view.scale + view.x, y: y * factor + y0 * view.scale + view.y }) };
@@ -163,7 +164,10 @@ async function loop(mine) {
     busy = true;
     try {
       const { image, roi, map } = grab();
-      const { readings } = await read(image, roi);
+      const grabbed = performance.now();
+      const size = `${image.width}×${image.height}`;
+      const { readings, ms } = await read(image, roi);
+      if (TIMING) timing(grabbed - readAt, ms, performance.now() - grabbed, size);
       if (mine !== session || scanner.dataset.state !== 'live') continue;
       outline(readings, map);
       const code = stabilizer.observe(readings, performance.now());
@@ -173,6 +177,23 @@ async function loop(mine) {
       }
     } catch { /* the worker's own handler tells */ } finally { busy = false; }
   }
+}
+
+/** Open the page with `#timing` to see where the time goes. */
+const TIMING = location.hash === '#timing';
+let frames = 0;
+let since = performance.now();
+let rate = 0;
+function timing(grab, reader, round, size) {
+  frames++;
+  if (performance.now() - since > 1000) { rate = (frames * 1000) / (performance.now() - since); frames = 0; since = performance.now(); }
+  let line = $('timing');
+  if (!line) {
+    line = Object.assign(document.createElement('p'), { id: 'timing' });
+    line.style.cssText = 'position:absolute;z-index:9;left:12px;bottom:12px;margin:0;padding:6px 10px;border-radius:8px;background:#000c;color:#fff;font:13px ui-monospace,monospace;white-space:pre-line';
+    scanner.append(line);
+  }
+  line.textContent = `grab ${grab.toFixed(0)} ms, reader ${reader.toFixed(0)} ms, round trip ${round.toFixed(0)} ms\n${rate.toFixed(1)} reads/s, video ${video.videoWidth}×${video.videoHeight}, read ${size}`;
 }
 
 function clear() { overlay.getContext('2d').clearRect(0, 0, overlay.width, overlay.height); }
