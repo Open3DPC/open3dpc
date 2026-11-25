@@ -29,6 +29,8 @@ internal class SampledMatrix(
     val lowestCellConfidence: Double,
     val diagnostics: StructuralDiagnostics,
     val structuralScore: Double,
+    /** How far this lattice's module is from the measured one, on the worse axis. */
+    val scaleError: Double,
 ) {
     val detail get() = "grid $rows×$columns · Mx/My ${format1(horizontalModule)}/${format1(verticalModule)} px · frame ${swiftRound(edgeMaterialFraction * 100).toInt()}%"
 }
@@ -52,6 +54,10 @@ internal class RasterOutcome(val stage: Open3DPCStage, val height: Int?, val wid
 internal object LatticeSampler {
     /** How far the leader must beat the runner-up on its least confident cell to settle a tie. */
     private const val CELL_CONFIDENCE_TIE_BREAK = 0.10
+
+    /** When the cells cannot settle a tie, the module measured on the orientation corner (1.5M) may. */
+    private const val SCALE_AGREEMENT = 0.08
+    private const val SCALE_SEPARATION = 0.04
 
     /** `analyzeFixture`. */
     fun analyze(raster: Raster, gates: Open3DPCGates = Open3DPCGates.Strict): RasterOutcome {
@@ -624,6 +630,7 @@ internal object LatticeSampler {
                 candidates += SampledMatrix(
                     sampled, rows, columns, frameScore, horizontalModule, verticalModule, markerScore, quietScore, lowestConfidence,
                     StructuralDiagnostics(interiorBackground, horizontalThickness, verticalThickness, moduleAspectRatio, markerScore), structuralScore,
+                    max(abs(horizontalModule / measuredMx - 1), abs(verticalModule / measuredMy - 1)),
                 )
             }
         }
@@ -632,6 +639,9 @@ internal object LatticeSampler {
         val runnerUp = ranked.getOrNull(1)
         if (runnerUp != null && (runnerUp.rows != best.rows || runnerUp.columns != best.columns) && best.structuralScore - runnerUp.structuralScore < 0.06) {
             if (best.lowestCellConfidence - runnerUp.lowestCellConfidence < CELL_CONFIDENCE_TIE_BREAK) {
+                val tied = ranked.filter { best.structuralScore - it.structuralScore < 0.06 }.sortedBy { it.scaleError }
+                if (tied[0].scaleError <= SCALE_AGREEMENT && tied[1].scaleError - tied[0].scaleError >= SCALE_SEPARATION)
+                    return SamplingResult(listOf(tied[0]), "", Open3DPCRejection.None, tied[0].diagnostics, true)
                 return SamplingResult(emptyList(), "ambiguous geometry hypotheses ${best.rows}×${best.columns} / ${runnerUp.rows}×${runnerUp.columns}",
                     Open3DPCRejection.AmbiguousGeometry, best.diagnostics, true)
             }

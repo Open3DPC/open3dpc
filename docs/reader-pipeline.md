@@ -156,6 +156,11 @@ the measured case. Weighted at a tenth, that 0.40 gap arrives as 0.04 against a
 for a rival it beat decisively on the only evidence about their disagreement.
 Ambiguity is still reported whenever the cells cannot separate them either.
 
+*When the cells cannot settle it either*, the measured module may: the lattice whose module is within 8 % of
+it wins, if the next best is at least 4 points further off. The module is measured on the orientation corner
+(frame plus feature, `1.5M`), independently of any lattice. A dark row or column from edge to edge has no cell
+borders to count and needs this.
+
 ## 11. Protocol validation
 
 Orientation normalization, then CRC, then the terminator.
@@ -200,19 +205,21 @@ unreliable on printed material. Stage 9 recovers the scale exactly; stages 7 and
 ## Known limits of the readers
 
 On perfect synthetic pictures the readers still refuse some codes. They did not return a wrong payload
-in any of these tests.
+in the tests of the two paragraphs below.
 
 Of the ten pictures in `spec/fixtures`, each at 0, 3, 5, 8, 12, 20 and 33 degrees, the Swift reader reads
 eight at 7 of 7, 9999 on `4 × 6` at 6 and 38 bits on `10 × 5` at 5.
 
-- **Some payloads.** Given exact rasters with a half-module white margin, the Swift sampler reads every
-  37th number from 1 to 9962 (270 numbers per shape) on `4 × 6`, `6 × 4` and `3 × 7`, and refuses one of
-  270 on `5 × 5` and on `4 × 5`.
-- **A dark column or row from edge to edge** leaves the count of rows (or columns) uncertain, because it
-  has no cell borders to count. In a live picture such a frame can be refused as ambiguous; the next one
-  usually settles it.
+- **Payloads.** Given exact rasters with a half-module white margin, the Swift sampler reads every
+  37th number from 1 to 9962 (270 numbers per shape) on `4 × 6`, `6 × 4`, `3 × 7`,
+  `5 × 5` and `4 × 5`. Other payloads and shapes are not measured.
 - **Pixel-aligned pictures.** Some codes that read at 3 to 20 degrees are refused at exactly 0. A
   hand-held camera does not stay there.
 - **Two-row codes** (`2 × W`) are refused by the Swift reader at some quarter turns.
+
+- **A crop that cuts into the frame can give a wrong payload.** On synthetic crops 0.1 to 0.25 modules too
+  tight the Swift sampler returned a wrong payload for up to 11 of 336 codes, mostly on `2 × 9`, where the
+  checksum has two bits. The reader aims its crop outside the frame to avoid this. Accept only the shapes
+  you print, act on two frames, and prefer a longer checksum.
 
 Test every code you are about to print in quantity.

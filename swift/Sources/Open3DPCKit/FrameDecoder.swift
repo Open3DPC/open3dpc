@@ -514,6 +514,11 @@ final class Open3DPCFrameDecoder {
         /// the structural terms cannot, since surplus background is structurally perfect.
         let lowestCellConfidence: Double
         let diagnostics: StructuralDiagnostics
+        /// How far this lattice's module is from the measured one, on the worse axis.
+        var scaleError: Double {
+            guard let marker = diagnostics.attachedMarker else { return .infinity }
+            return max(abs(horizontalModule / marker.horizontalModule - 1), abs(verticalModule / marker.verticalModule - 1))
+        }
         let cellConfidences: [Open3DPCVisualMetrics.CellConfidence]
         let structuralScore: Double
         let samplingGrid: Open3DPCVisualMetrics.SamplingGrid?
@@ -663,6 +668,13 @@ final class Open3DPCFrameDecoder {
             [point($0.topLeft), point($0.topRight), point($0.bottomRight), point($0.bottomLeft)]
         }
     }
+
+    /// When the cells cannot settle a tie, the measured module may: the lattice whose module is within
+    /// `scaleAgreement` of it, if the next best is at least `scaleSeparation` further off. The module
+    /// is measured on the orientation corner (frame plus feature, 1.5M), so it owes nothing to the
+    /// lattice. A dark row or column from edge to edge has no cell borders to count and needs this.
+    static let scaleAgreement = 0.08
+    static let scaleSeparation = 0.04
 
     /// How far the leading hypothesis must beat the runner-up on its least confident cell to settle a
     /// structural tie. See docs/reader-pipeline.md, stage 10.
@@ -1780,6 +1792,13 @@ final class Open3DPCFrameDecoder {
            (runnerUp.rows != best.rows || runnerUp.columns != best.columns),
            best.structuralScore - runnerUp.structuralScore < 0.06 {
             let separation = best.lowestCellConfidence - runnerUp.lowestCellConfidence
+            if separation < Self.cellConfidenceTieBreak {
+                let tied = ranked.filter { best.structuralScore - $0.structuralScore < 0.06 }.sorted { $0.scaleError < $1.scaleError }
+                if tied[0].scaleError <= Self.scaleAgreement,
+                   tied[1].scaleError - tied[0].scaleError >= Self.scaleSeparation {
+                    return .init(matrices: [tied[0]], rejection: "", diagnostics: tied[0].diagnostics, hasPhysicalSignature: true)
+                }
+            }
             guard separation >= Self.cellConfidenceTieBreak else {
                 return .init(
                     matrices: [],

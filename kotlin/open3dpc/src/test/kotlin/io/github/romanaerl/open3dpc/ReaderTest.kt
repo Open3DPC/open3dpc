@@ -140,7 +140,7 @@ class ReaderTest {
 
     /** A dark data row or column is as long as a side of the frame and must not be taken for one. */
     @Test fun dataRowsAreNotFrameSides() {
-        for ((rows, columns) in listOf(4 to 6, 6 to 4, 3 to 7)) for (number in 1..9999 step 37) {
+        for ((rows, columns) in listOf(4 to 6, 6 to 4, 3 to 7, 5 to 5, 4 to 5)) for (number in 1..9999 step 37) {
             val payload = number.toString(2).padStart(14, '0')
             val code = ReferenceRaster.render(Open3DPC.encode(payload, rows, columns), 24)
             val pad = 12

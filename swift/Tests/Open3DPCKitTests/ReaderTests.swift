@@ -113,8 +113,8 @@ final class ReaderTests: XCTestCase {
 
     /// A dark data row or column is as long as a side of the frame and must not be taken for one.
     func testDataRowsAreNotFrameSides() throws {
-        for (height, width) in [(4, 6), (6, 4), (3, 7)] {
-            for number in stride(from: 1, through: 9999, by: 37 * 5) {
+        for (height, width) in [(4, 6), (6, 4), (3, 7), (5, 5), (4, 5)] {
+            for number in Array(stride(from: 1, through: 9999, by: 37 * 5)) + [963] {
                 let payload = bits(String(repeating: "0", count: 14 - String(number, radix: 2).count) + String(number, radix: 2))
                 let matrix = try XCTUnwrap(Open3DPC.encode(payload: payload, geometry: .init(height: height, width: width)))
                 let code = Grey(matrix, module: 24)
