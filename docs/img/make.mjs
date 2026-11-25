@@ -1,4 +1,4 @@
-// Draws hero.svg and anatomy.svg from the generator. Run: node docs/img/make.mjs
+// Draws logo.svg, hero.svg and anatomy.svg from the generator. Run: node docs/img/make.mjs
 import { writeFileSync } from 'node:fs';
 import { darkGrid, encode } from '../../generator/open3dpc.js';
 
@@ -60,4 +60,13 @@ const code = encode('10011100001111', 4, 6);
   });
   s.push(`<path d="M${x0} 452h${M}" stroke="#5d6562" stroke-width="2"/><path d="M${x0} 447v10M${x0 + M} 447v10" stroke="#5d6562" stroke-width="2"/><text x="${x0 + M / 2}" y="476" text-anchor="middle" font-size="14" fill="#5d6562">M</text><text x="${x0 + M + 16}" y="457" font-size="14" fill="#5d6562">1.6 mm by default, so the code is 12.8 × 9.6 mm</text>`);
   out('anatomy.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 494" width="860" height="494" ${font} role="img" aria-label="The parts of an Open3DPC code: quiet zone, frame, orientation square, payload, terminator, padding and checksum">${s.join('')}</svg>`);
+}
+
+// ---- logo: a real 5 × 16 code whose cells spell 3DPC, on its M/2 quiet zone
+{
+  const logo = encode('0110011001110100001010101010100110010101110100001010101000100110011001000', 5, 16);
+  const grid = darkGrid(logo);
+  const path = grid.map((row, r) => row.map((dark, c) => (dark && !row[c - 1] ? `M${c} ${r}h${[...row.slice(c), 0].indexOf(0)}v1H${c}z` : '')).join('')).join('');
+  const [w, h] = [grid[0].length, grid.length];
+  out('logo.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${w + 2} ${h + 2}" width="${(w + 2) * 16}" height="${(h + 2) * 16}" shape-rendering="crispEdges" role="img" aria-label="Open3DPC logo: an Open3DPC code whose cells spell 3DPC"><path fill="#fff" d="M-1-1h${w + 2}v${h + 2}H-1z"/><path fill="#111" d="${path}"/></svg>`);
 }

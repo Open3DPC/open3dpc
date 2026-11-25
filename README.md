@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/img/logo.svg" width="420" alt="Open3DPC logo: an Open3DPC code whose cells spell 3DPC"></p>
+
 <p align="center"><img src="docs/img/hero.svg" width="640" alt="A drawing of a two-colour tile with an Open3DPC code holding the number 9999"></p>
 
 <h1 align="center">Open3DPC</h1>
