@@ -21,7 +21,7 @@ to your app.
 ### Ask your agent
 
 ```text
-Add an Open3DPC scanner to this app. Read https://github.com/romanaerl/open3dpc/blob/main/docs/web.md,
+Add an Open3DPC scanner to this app. Read https://github.com/Open3DPC/open3dpc/blob/main/docs/web.md,
 use the reader it describes, accept only 14-bit codes, and call onCode(number) when one is confirmed.
 ```
 

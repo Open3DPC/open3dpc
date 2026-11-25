@@ -5,11 +5,11 @@ Core Video). iOS 15 and macOS 12 or later.
 
 ## 1. Add the package
 
-In Xcode: File, Add Package Dependencies, `https://github.com/romanaerl/open3dpc`, branch `main`
+In Xcode: File, Add Package Dependencies, `https://github.com/Open3DPC/open3dpc`, branch `main`
 (there is no tagged release yet), product `Open3DPCKit`. Or in `Package.swift`:
 
 ```swift
-dependencies: [.package(url: "https://github.com/romanaerl/open3dpc", branch: "main")],
+dependencies: [.package(url: "https://github.com/Open3DPC/open3dpc", branch: "main")],
 targets: [.target(name: "App", dependencies: [.product(name: "Open3DPCKit", package: "open3dpc")])]
 ```
 
