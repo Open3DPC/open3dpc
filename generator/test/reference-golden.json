@@ -1,0 +1,714 @@
+{
+    "note": "Output of an independent PHP implementation of the same format. svgSha256: the SVG; stlBodySha256: the STL without its 80-byte header.",
+    "cases": [
+        {
+            "id": "h1w5-full",
+            "payload": "10",
+            "h": 1,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O1010"
+            ],
+            "svgSha256": "e32e157e38c7733aa87d3edaaa698a0cde694a48769c9d9f4422cc72f0173048",
+            "stlBytes": 18484,
+            "stlBodySha256": "60974a025107106b677a6784e91c7648b80f48a25990c79c53cdaaac0649dff4"
+        },
+        {
+            "id": "h1w5-short",
+            "payload": "1",
+            "h": 1,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O1100"
+            ],
+            "svgSha256": "102c7591ffa668e27367788af9e410dece0b67bfd5e19dfc72d4cd470ffddcb1",
+            "stlBytes": 18084,
+            "stlBodySha256": "a8a88b26649c2c526874aec4f9468aaed96ea9add51261e3d60c42b971799b98"
+        },
+        {
+            "id": "h2w4-full",
+            "payload": "1010",
+            "h": 2,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010"
+            ],
+            "svgSha256": "7db043caf2af3d8e25c83732d1437c49776a8b88cf53f10d51d685985cac5052",
+            "stlBytes": 20084,
+            "stlBodySha256": "2d5d2ed562b0d36ebee35b5fc439f1c0e7b38fd52a5ce83bbe49e44c7394388f"
+        },
+        {
+            "id": "h2w4-short",
+            "payload": "1",
+            "h": 2,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O111",
+                "0000"
+            ],
+            "svgSha256": "13f5b8acad6dbcfebd3b5c0e52e831873c7000e61fd3eb10d8a2f815b3dd6c92",
+            "stlBytes": 19284,
+            "stlBodySha256": "2e124618b41cee1d00a677ba9bca9074e9758a6b422b2de067ecaef418d4ebd7"
+        },
+        {
+            "id": "h3w4-full",
+            "payload": "1010101",
+            "h": 3,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0111"
+            ],
+            "svgSha256": "de4bfd4ee742b8cd67de2c72832e80118139fcfa831fd001208f58c54b6392e5",
+            "stlBytes": 25284,
+            "stlBodySha256": "8e92e86a215f3cea1aa1fa163643d89b44e50c7fd4c07cb836b02860ebff65cd"
+        },
+        {
+            "id": "h3w4-short",
+            "payload": "1010",
+            "h": 3,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1010",
+                "0000"
+            ],
+            "svgSha256": "4f25384c7a82531849828cd68ea759e0eb74efc16b615bcb10e022d784c89d5c",
+            "stlBytes": 23284,
+            "stlBodySha256": "16efb4ddb014e2c91290d6c8fb0748c0f786b721717ecb212774f45a781fc47c"
+        },
+        {
+            "id": "h4w4-full",
+            "payload": "1010101010",
+            "h": 4,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011"
+            ],
+            "svgSha256": "4c5e16caf2b787747b05e14638d941a42c003b3f0bd8001e04381106abfe320b",
+            "stlBytes": 32084,
+            "stlBodySha256": "5f6a0593212911d9a0644917e26f81cf9743ed48aeadc65a719d7321590b0d57"
+        },
+        {
+            "id": "h4w4-short",
+            "payload": "1010101",
+            "h": 4,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1011",
+                "0111",
+                "0001"
+            ],
+            "svgSha256": "a0b7b86f565dc7068660c8e485b3552b88768e07c225264b3a5ad7164ce56820",
+            "stlBytes": 30084,
+            "stlBodySha256": "1f32a7f8648685c9fd69ee2092e364ecaad43b2a464ebe893adcfccebd807c37"
+        },
+        {
+            "id": "h5w4-full",
+            "payload": "1010101010101",
+            "h": 5,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1011",
+                "0100",
+                "1010",
+                "0110"
+            ],
+            "svgSha256": "871275c3201423a7d2aaaa8ba68b19b1601ffd97bfa8d42ea94c9971551f8396",
+            "stlBytes": 34484,
+            "stlBodySha256": "bb51b0e0afc51910bef85d8e79f3b07bc68ca5368371200f252b84ab030e65e3"
+        },
+        {
+            "id": "h5w4-short",
+            "payload": "1010101010",
+            "h": 5,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011",
+                "0001"
+            ],
+            "svgSha256": "0d198e8c61eede07bd9f47a4420e93c33b50c7dace87edb570549d968eaa7bb8",
+            "stlBytes": 34884,
+            "stlBodySha256": "d990393c593c99364f1475ea1e68a8c73e452dc014d2458a1936a8bf92b849ca"
+        },
+        {
+            "id": "h6w4-full",
+            "payload": "1010101010101010",
+            "h": 6,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010"
+            ],
+            "svgSha256": "fe33be8da280c98bc359e12906cfd96039920132ea82eaf9adc7c0b3ac59e9a3",
+            "stlBytes": 40084,
+            "stlBodySha256": "1ab08ca0c504e7a25ebd3d8a59e836bc0e51c19ac0019db19bcf8f12f61fd8a1"
+        },
+        {
+            "id": "h6w4-short",
+            "payload": "1010101010101",
+            "h": 6,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0100",
+                "1011",
+                "0110",
+                "0001"
+            ],
+            "svgSha256": "8e19fde8b5ae20c8082292dfb7c7c30d4891befa44aa316af7a7c4a4ab063552",
+            "stlBytes": 36484,
+            "stlBodySha256": "7484fbd6a7201bbe20295b39fbc41da848096d9971d299ed20160ee089aec5da"
+        },
+        {
+            "id": "h7w4-full",
+            "payload": "1010101010101010101",
+            "h": 7,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0100",
+                "1010",
+                "0100",
+                "1011",
+                "0110"
+            ],
+            "svgSha256": "061df21f69b8fc0049a6e7aa5cbcd6b8c22a1dd47b0b70cb77c6eb5cab219aca",
+            "stlBytes": 41284,
+            "stlBodySha256": "580460766f96052f9dbf4f49797984e6ae10445b5baf85a7cf9d83ecb79da229"
+        },
+        {
+            "id": "h7w4-short",
+            "payload": "1010101010101010",
+            "h": 7,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0000"
+            ],
+            "svgSha256": "a6e0d2b4cfac997b2a713dccc1bfa1fc63cf0261cab749f0ae07ce5768c2ae85",
+            "stlBytes": 40884,
+            "stlBodySha256": "0921c37f86b182596b155540874da4f962032ac1cb6fa4e81fc446ece0274848"
+        },
+        {
+            "id": "h8w4-full",
+            "payload": "1010101010101010101010",
+            "h": 8,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0100",
+                "1010",
+                "0100",
+                "1011",
+                "0100",
+                "1011"
+            ],
+            "svgSha256": "74f6028b6e401b2406dcd36a0f6d1b6423e2fd2ed7abd2365872dc22a718bfe6",
+            "stlBytes": 46484,
+            "stlBodySha256": "d8591296efdaa7d7a387882747a430b6c7e237383dd610f23977f3e66675a2de"
+        },
+        {
+            "id": "h8w4-short",
+            "payload": "1010101010101010101",
+            "h": 8,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1010",
+                "0101",
+                "1010",
+                "0100",
+                "1011",
+                "0111",
+                "0000"
+            ],
+            "svgSha256": "014ff25d470431868f4503d9ffb97141edcf8909ff5bdd811a46d02d8759c3c9",
+            "stlBytes": 45284,
+            "stlBodySha256": "f8da7170dde8030e0bd1eb97d3b894b6963a63c0c9b995e21bff1154201d1bd2"
+        },
+        {
+            "id": "h9w4-full",
+            "payload": "1010101010101010101010101",
+            "h": 9,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1011",
+                "0100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1011",
+                "0111"
+            ],
+            "svgSha256": "fa47671dc234f7b6e5ee94635f37314c2c9ff2cf847d60135ec277401de9375f",
+            "stlBytes": 54884,
+            "stlBodySha256": "bdee0d907777911c62a053193ac2c5e9326d69c2dc514aa013cc66618e47373b"
+        },
+        {
+            "id": "h9w4-short",
+            "payload": "1010101010101010101010",
+            "h": 9,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1011",
+                "0100",
+                "1011",
+                "0101",
+                "1011",
+                "0100",
+                "1011",
+                "0000"
+            ],
+            "svgSha256": "5f51217cca61a8989313c8639b16387523277b2125b8f4645aa5f362c70a4839",
+            "stlBytes": 52484,
+            "stlBodySha256": "4d3219a032aebaccecdde56a4d4e6095bf8c638807f740797b80faf1f00483e1"
+        },
+        {
+            "id": "h10w4-full",
+            "payload": "1010101010101010101010101010",
+            "h": 10,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0101",
+                "1011",
+                "0101",
+                "1011"
+            ],
+            "svgSha256": "6482ac05d40b5b0a95a89b379071a7492703834d44021b931864de6988a8ee26",
+            "stlBytes": 60484,
+            "stlBodySha256": "2c64beab73ef3547046fc1ca67a3532b294c775cd6dad2469368c14627647cc2"
+        },
+        {
+            "id": "h10w4-short",
+            "payload": "1010101010101010101010101",
+            "h": 10,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1011",
+                "0101",
+                "1011",
+                "0101",
+                "1010",
+                "0101",
+                "1010",
+                "0111",
+                "0001"
+            ],
+            "svgSha256": "7d60435bd95b0b6f950fe7ef185f3d8a47b3ded1992d09142051a9c0ea58ff64",
+            "stlBytes": 59284,
+            "stlBodySha256": "0053321d45685425d8346a955ab97d994f06bf5b4a8c4b41d6a08b0c34c61107"
+        },
+        {
+            "id": "h11w19-full",
+            "payload": "10101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101",
+            "h": 11,
+            "w": 19,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101011"
+            ],
+            "svgSha256": "b6d7a0706889006f83e9e7a20b93f9c516282ee52d45ab5264548bc7568da9a4",
+            "stlBytes": 182884,
+            "stlBodySha256": "b83efe7d27faf071b052214b8b32c33f43d619df30d2e403d3a8b2c95b3edadd"
+        },
+        {
+            "id": "h11w19-short",
+            "payload": "10101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010101010",
+            "h": 11,
+            "w": 19,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101010101010101010",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101011",
+                "0101010101010101010",
+                "0101010101010101011",
+                "0101010101010101000"
+            ],
+            "svgSha256": "2de085a5a51263816b616a85c83dcbf49be776fb80002426a6e63cbc7f213e51",
+            "stlBytes": 179284,
+            "stlBodySha256": "4fdb7bdb2eec7a9ad3aa41cb65fb645911972923e22591977720f681970b0c69"
+        },
+        {
+            "id": "h4w4-zero",
+            "payload": "0000000000",
+            "h": 4,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O000",
+                "0000",
+                "0001",
+                "0011"
+            ],
+            "svgSha256": "a7e5671e26c3b53b58126b1a2cd84e2026ede66d0d7a55b2f44f1aca5fee1076",
+            "stlBytes": 22484,
+            "stlBodySha256": "3561a1ea565140d696ef70f9140282535b6a7741084ea86caaae872c3f0b75e6"
+        },
+        {
+            "id": "h4w4-one",
+            "payload": "1111111111",
+            "h": 4,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O111",
+                "1111",
+                "1111",
+                "1111"
+            ],
+            "svgSha256": "a9d99fc4afe550fe244f6426b3e932f01e3dafb811c340024cc32366d956ba6c",
+            "stlBytes": 33684,
+            "stlBodySha256": "874a1ef6f3d3762772efc0ba1f8f4e334d2e5615478362bed1677229901b0eb5"
+        },
+        {
+            "id": "h4w4-alt",
+            "payload": "1010101010",
+            "h": 4,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O101",
+                "1010",
+                "0101",
+                "1011"
+            ],
+            "svgSha256": "4c5e16caf2b787747b05e14638d941a42c003b3f0bd8001e04381106abfe320b",
+            "stlBytes": 32084,
+            "stlBodySha256": "5f6a0593212911d9a0644917e26f81cf9743ed48aeadc65a719d7321590b0d57"
+        },
+        {
+            "id": "h2w7-empty-payload",
+            "payload": "",
+            "h": 2,
+            "w": 7,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100000",
+                "0000001"
+            ],
+            "svgSha256": "0df9a6789b7e68fc1d6420e4436f6dfbc14baf45ed1a48a1a227a0f40499c29f",
+            "stlBytes": 23284,
+            "stlBodySha256": "05e92b4b2e154966ece729a2b7b5e301a55c3ada2b108887ce4e3a5934b25ced"
+        },
+        {
+            "id": "h3w5-short-a",
+            "payload": "010000000",
+            "h": 3,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O0100",
+                "00000",
+                "00101"
+            ],
+            "svgSha256": "f37580df530a7b92f30dc5761aeee0d85c3b19310d9c6a0553db93f9c08e4002",
+            "stlBytes": 23284,
+            "stlBodySha256": "af976f0c84fd89e237a8cc0dc6e4953c372e321ca6e23b9e93cf2980f7cb87eb"
+        },
+        {
+            "id": "h3w5-short-b",
+            "payload": "010001000",
+            "h": 3,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O0100",
+                "00101",
+                "00101"
+            ],
+            "svgSha256": "0d6d22988795d1c80b07bfe9388346633b4083697652bb879f140641c42dc42e",
+            "stlBytes": 25284,
+            "stlBodySha256": "372b4450f8049c0fe6fc6c618800be66722135290925be0d4dac7e6ec5c2a770"
+        },
+        {
+            "id": "h3w5-short-c",
+            "payload": "010011011",
+            "h": 3,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O0101",
+                "01100",
+                "11101"
+            ],
+            "svgSha256": "22e01c6ea7a0aa6a19b77cb11cdd7d89d927f037b15e9bb0e4eb43678faa4233",
+            "stlBytes": 28884,
+            "stlBodySha256": "478812587058dc5ea56fe3522f6db56dc31477590007b6862c68b3ca9862d879"
+        },
+        {
+            "id": "h3w5-short-d",
+            "payload": "010111100",
+            "h": 3,
+            "w": 5,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O0101",
+                "11110",
+                "00101"
+            ],
+            "svgSha256": "f62f950c9b0936232e6ea8917fb336ceaf4dce1ac08861a903b7ebf5236177e5",
+            "stlBytes": 29284,
+            "stlBodySha256": "38f2462b7c0e423778dec05c5e16e64ca53f271a29bc2d40e464ea47d423a2d9"
+        },
+        {
+            "id": "9999-4x6",
+            "payload": "10011100001111",
+            "h": 4,
+            "w": 6,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O10011",
+                "110001",
+                "011110",
+                "100001"
+            ],
+            "svgSha256": "bdac4643aea9575f4a38f55b4e32b98057eb0ec76effc231fafa142639ded08f",
+            "stlBytes": 37684,
+            "stlBodySha256": "d3d29fcfeb4f635b9bd3040bdf115e99f0a597831bc232cb142fec57f7484155"
+        },
+        {
+            "id": "9999-6x4",
+            "payload": "10011100001111",
+            "h": 6,
+            "w": 4,
+            "module": 1.6,
+            "materialHeight": 0.6,
+            "rows": [
+                "O100",
+                "0110",
+                "1000",
+                "0010",
+                "1110",
+                "1000"
+            ],
+            "svgSha256": "d42b9b6c66e732cf826586dbc8960783818070ae8aa15d9e7674bfe4b4963935",
+            "stlBytes": 33684,
+            "stlBodySha256": "171e237c87135f8dc5ee4aa07a6ca52012f98738600974e98a177f4f5ddb7754"
+        },
+        {
+            "id": "module-0.8",
+            "payload": "101101",
+            "h": 3,
+            "w": 4,
+            "module": 0.8,
+            "materialHeight": 0.3,
+            "rows": [
+                "O100",
+                "1100",
+                "1101"
+            ],
+            "svgSha256": "1e694a629bde9b964d630a50ccae8d49fb0b98556afc32f17a613db8753eb131",
+            "stlBytes": 24484,
+            "stlBodySha256": "253add09719d79caf3fc8aa7f1fef75e9311f98015fc1079c1c1da4c10ea2bcd"
+        },
+        {
+            "id": "module-2.4",
+            "payload": "101101",
+            "h": 4,
+            "w": 4,
+            "module": 2.4,
+            "materialHeight": 0.9,
+            "rows": [
+                "O100",
+                "1101",
+                "1101",
+                "0001"
+            ],
+            "svgSha256": "ff2bd0ca73451f83314e962bcb17787c889c81a22b37c91d637b27b6590d80d1",
+            "stlBytes": 28484,
+            "stlBodySha256": "31a0da4ac7b40e7edafc783e29543d37a40e32d124a1b96323a1dcbcdbeb194a"
+        },
+        {
+            "id": "88-bits",
+            "payload": "1011001100110011001100110011001100110011001100110011001100110011001100110011001100110101",
+            "h": 10,
+            "w": 10,
+            "module": 1.6,
+            "materialHeight": 0.46,
+            "rows": [
+                "O101100110",
+                "0011001101",
+                "0110011001",
+                "1100110011",
+                "1001100111",
+                "0011001100",
+                "0110011001",
+                "1100110010",
+                "1001100111",
+                "0011010110"
+            ],
+            "svgSha256": "bf95ec3d89860a8163f82f0d658f453f952d7cad052494b4213b86b45c636344",
+            "stlBytes": 102084,
+            "stlBodySha256": "727740cdffeee82551b42d512f39b1cf522063d322380e62aff7d5ffbeb11732"
+        }
+    ],
+    "candidates": [
+        {
+            "bits": 1,
+            "geometries": []
+        },
+        {
+            "bits": 6,
+            "geometries": [
+                "1x9",
+                "1x10",
+                "2x5",
+                "3x4"
+            ]
+        },
+        {
+            "bits": 9,
+            "geometries": [
+                "2x7",
+                "3x5",
+                "4x4"
+            ]
+        },
+        {
+            "bits": 14,
+            "geometries": [
+                "2x9",
+                "2x10",
+                "3x7",
+                "4x5",
+                "6x4"
+            ]
+        },
+        {
+            "bits": 20,
+            "geometries": [
+                "3x9",
+                "4x7",
+                "5x6",
+                "6x5",
+                "8x4"
+            ]
+        },
+        {
+            "bits": 37,
+            "geometries": [
+                "5x9",
+                "5x10",
+                "6x8",
+                "7x7",
+                "8x6",
+                "9x6",
+                "10x5"
+            ]
+        },
+        {
+            "bits": 64,
+            "geometries": [
+                "8x10",
+                "9x9",
+                "10x8"
+            ]
+        },
+        {
+            "bits": 88,
+            "geometries": [
+                "10x10"
+            ]
+        }
+    ]
+}

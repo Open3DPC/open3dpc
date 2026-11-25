@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Open3DPC generator</title>
+<meta name="description" content="Make an Open3DPC code for a two-colour 3D print: enter a number, download STL and SVG. Runs in your browser.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath d='M0 0h12v12H0z'/%3E%3Cpath fill='%23fff' d='M1 1h10v10H1z'/%3E%3Cpath d='M1 1h3v3H1zM6 4h2v2H6zM4 6h2v4H4z'/%3E%3C/svg%3E">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="https://github.com/romanaerl/open3dpc">
+    <svg viewBox="0 0 12 12" aria-hidden="true"><path fill="currentColor" d="M0 0h12v12H0zM1 1v10h10V1z" fill-rule="evenodd"/><path fill="currentColor" d="M1 1h2v2H1zM6 4h2v2H6zM4 6h2v4H4z"/></svg>
+    Open3DPC
+  </a>
+  <nav><a href="https://github.com/romanaerl/open3dpc/blob/main/docs/concept.md">Why</a><a href="https://github.com/romanaerl/open3dpc/blob/main/spec/v2.md">Specification</a><a href="https://github.com/romanaerl/open3dpc">GitHub</a></nav>
+</header>
+
+<main>
+  <div class="intro">
+    <h1>Print a code into the object</h1>
+    <p>Enter a number, pick a shape, download the STL. Everything is computed in your browser; nothing is uploaded.</p>
+  </div>
+
+  <section class="stage" aria-label="Preview and downloads">
+    <div class="preview" id="preview"></div>
+    <p class="dims" id="dims"></p>
+    <div class="toggles">
+      <label><input type="checkbox" id="showQuiet" checked> Quiet zone</label>
+      <label><input type="checkbox" id="debug"> Show bits</label>
+    </div>
+    <div class="legend" id="legend" hidden>
+      <span><i style="background:#111"></i>orientation</span><span><i style="background:#1D4ED8"></i><i style="background:#DBEAFE"></i>payload</span><span><i style="background:#15803D"></i>terminator</span><span><i style="background:#E5E7EB"></i>padding</span><span><i style="background:#7E22CE"></i><i style="background:#D8B4FE"></i>CRC</span>
+    </div>
+    <div class="downloads">
+      <button id="stl" class="primary">Download STL</button>
+      <button id="backing">Backing STL</button>
+      <button id="svg">SVG</button>
+      <button id="png">PNG</button>
+    </div>
+    <p class="hint">STL is the dark material alone. The backing is the light body it sits in, with the quiet zone and a plate under it: load both as one object and give each its filament.</p>
+    <dl class="facts" id="facts"></dl>
+  </section>
+
+  <form id="form" class="controls" autocomplete="off">
+    <p class="error" id="error" role="alert" hidden></p>
+    <fieldset id="payload">
+      <legend>Payload</legend>
+      <div class="segmented" role="radiogroup" aria-label="Payload type">
+        <label><input type="radio" name="mode" value="integer" checked><span>Number</span></label>
+        <label><input type="radio" name="mode" value="binary"><span>Bits</span></label>
+      </div>
+      <div class="row">
+        <label class="grow"><span id="valueLabel">Number</span><input id="value" name="value" inputmode="numeric" value="9999" spellcheck="false"></label>
+        <label id="lengthField"><span>Length, bits</span><input name="bits" type="number" min="1" max="512" step="1" value="14" placeholder="auto"></label>
+      </div>
+      <p class="hint">The length is part of what a reader sees. Give all the codes of one kind the same length: 14 bits hold 0 to 16383. Encoded payload: <output id="canonical"></output></p>
+    </fieldset>
+
+    <fieldset id="printer">
+      <legend>Printer</legend>
+      <div class="row">
+        <label><span>Nozzle, mm</span><input name="nozzle" type="number" min="0.1" step="0.05" value="0.4"></label>
+        <label><span>Thinnest line</span><select name="passes"><option value="2">2 passes</option><option value="3">3 passes</option><option value="4">4 passes</option></select></label>
+        <label><span>Module M, mm</span><input name="module" type="number" min="0.1" step="0.05" placeholder="auto"></label>
+        <label><span>Code height, mm</span><input name="height" type="number" min="0.02" step="0.02" placeholder="auto"></label>
+        <label><span>Plate, mm</span><input name="plate" type="number" min="0.1" step="0.1" value="1"></label>
+      </div>
+      <p class="hint" id="printHint"></p>
+    </fieldset>
+
+    <fieldset id="shape">
+      <legend>Shape</legend>
+      <div class="row">
+        <label><span>Max width, mm</span><input name="maxWidth" type="number" min="1" step="0.1" placeholder="any"></label>
+        <label><span>Max height, mm</span><input name="maxHeight" type="number" min="1" step="0.1" placeholder="any"></label>
+        <label><span>Checksum at least</span><select name="minCrc"><option value="0">any</option><option value="3">3 bits</option><option value="4">4 bits</option><option value="6">6 bits</option><option value="8">8 bits</option><option value="10">10 bits</option></select></label>
+      </div>
+      <p class="hint">Limits include the quiet zone. Rows × columns; taller codes carry a longer checksum. “Random pass” is the share of random cell patterns a reader would take for a code of this length and shape.</p>
+      <div class="shapes" id="shapes" role="radiogroup" aria-label="Code shape"></div>
+      <button type="button" id="more" class="link">Show larger shapes</button>
+    </fieldset>
+  </form>
+
+  <section class="notes">
+    <h2>Printing it</h2>
+    <ol>
+      <li>Use two filaments with strong contrast. Pairs close in tone, such as white on pink, may not read.</li>
+      <li>Keep at least the M/2 quiet zone clear on all four sides. The backing already has it.</li>
+      <li>Two dark areas that touch only at a corner are separate closed shells; some slicers may report this as a warning.</li>
+    </ol>
+    <p class="hint">Print accuracy, reading distance and whether the minimum quiet zone is enough have not been measured across printers, materials and phones. Print one and test it before you print a hundred.</p>
+  </section>
+</main>
+<script type="module" src="page.js"></script>
+</body>
+</html>
