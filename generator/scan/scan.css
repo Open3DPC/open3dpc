@@ -16,7 +16,7 @@ header a+a{font-weight:500;color:var(--muted)}
 [data-state=found] .finder i{border-color:var(--accent)}[data-state=found] .finder i::after{background:var(--accent)}
 .welcome{position:relative;z-index:2;display:grid;justify-items:center;gap:14px;text-align:center;max-width:620px;margin:0 auto;padding:6vh 22px 40px}
 [data-state=live] .welcome,[data-state=found] .welcome{display:none}
-.welcome>svg{width:84px;fill:var(--accent)}
+.welcome>svg{width:92px}header .lockup{width:196px;height:auto;display:block}
 h1{font-size:clamp(1.9rem,7vw,2.8rem);line-height:1.08;letter-spacing:-.03em;margin:0;text-wrap:balance}
 .welcome p{margin:0;color:var(--muted);max-width:44ch}
 button,.file,.open-scanner{font:600 1rem var(--sans);color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:14px;min-height:48px;padding:10px 20px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center}

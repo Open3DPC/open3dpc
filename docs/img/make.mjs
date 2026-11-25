@@ -1,5 +1,5 @@
 // Draws logo.svg, hero.svg and anatomy.svg from the generator. Run: node docs/img/make.mjs
-import { writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { darkGrid, encode } from '../../generator/open3dpc.js';
 
 const out = (name, body) => writeFileSync(new URL(name, import.meta.url), body + '\n');
@@ -76,4 +76,16 @@ const code = encode('10011100001111', 4, 6);
   const cells = encode('0'.repeat(10), 4, 4).rows;
   const path = cells.map((row, r) => [...row].map((c, x) => (c === '1' ? `M${2 * x + 2} ${2 * r + 2}h2v2h-2z` : '')).join('')).join('');
   out('icon.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 14 14" width="448" height="448" shape-rendering="crispEdges" role="img" aria-label="Open3DPC icon: the number 0 as a code"><path fill="#fff" d="M-1-1h14v14H-1z"/><path fill="#111" fill-rule="evenodd" d="M0 0h12v12H0zM1 1v10h10V1z"/><path fill="#111" d="M1 1h2v2H1z${path}"/></svg>`);
+}
+
+// ---- the lockup: the icon in orange beside the long logo, for light and for dark pages
+{
+  const paths = (bits, h, w) => {
+    const grid = darkGrid(encode(bits, h, w));
+    return grid.map((row, r) => row.map((dark, c) => (dark && !row[c - 1] ? `M${c} ${r}h${[...row.slice(c), 0].indexOf(0)}v1H${c}z` : '')).join('')).join('');
+  };
+  const long = /encode\('([01]+)', 7, 34\)/.exec(readFileSync(new URL(import.meta.url), 'utf8'))[1];
+  const icon = `<g transform="scale(1.25)"><rect width="16" height="16" rx="2.6" fill="#ff5a3c"/><path transform="translate(2 2)" fill="#fff" d="${paths('0'.repeat(10), 4, 4)}"/></g>`;
+  for (const [name, paper, ink] of [['light', '#fff', '#111'], ['dark', '#111', '#fff']])
+    out(`lockup-${name}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 20" width="784" height="160" shape-rendering="crispEdges" role="img" aria-label="Open3DPC">${icon}<g transform="translate(25 1)"><path fill="${paper}" d="M-1-1h74v20H-1z"/><path fill="${ink}" d="${paths(long, 7, 34)}"/></g></svg>`);
 }
