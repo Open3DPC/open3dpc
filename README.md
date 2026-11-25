@@ -86,8 +86,8 @@ val stabilizer = Open3DPCStabilizer()
 stabilizer.observe(reader.read(frame, viewfinder), nowMs)?.let { println(it.value) }   // 9999
 ```
 
-None needs a vision library of its own: the Swift reader uses Apple's Vision, the others find
-their own rectangles.
+None needs a vision library of its own: each finds its own rectangles, and the Swift reader also asks
+Apple's Vision.
 
 ## What is here
 

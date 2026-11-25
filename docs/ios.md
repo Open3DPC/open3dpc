@@ -1,6 +1,6 @@
 # Reading Open3DPC on iOS
 
-`Open3DPCKit` is a Swift package with no dependencies beyond Apple frameworks (Vision, Core Image,
+`Open3DPCKit` is a Swift package with no dependencies beyond Apple frameworks (Core Image, Vision,
 Core Video). iOS 15 and macOS 12 or later.
 
 ## 1. Add the package

@@ -52,6 +52,7 @@ public final class Open3DPCReader {
 
     public init(options: Options = .init()) {
         self.options = options
+        decoder.accepts = { [options] in Self.accepts($0, options) }
     }
 
     /// Reads a camera frame.
@@ -84,10 +85,14 @@ public final class Open3DPCReader {
             nil, width, height, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange, attributes, &buffer
         ) == kCVReturnSuccess, let buffer else { return [] }
         context.render(CIImage(cgImage: image), to: buffer)
-        return read(buffer)
+        // Each frame is searched one way; a picture gets both.
+        let found = read(buffer)
+        return found.isEmpty ? read(buffer) : found
     }
 
-    func accepts(_ code: Open3DPC.Validated) -> Bool {
+    func accepts(_ code: Open3DPC.Validated) -> Bool { Self.accepts(code, options) }
+
+    private static func accepts(_ code: Open3DPC.Validated, _ options: Options) -> Bool {
         (options.payloadLengths?.contains(code.payloadLength) ?? true)
             && (options.geometries?.contains(code.geometry) ?? true)
     }

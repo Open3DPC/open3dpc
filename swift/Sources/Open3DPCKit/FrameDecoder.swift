@@ -36,6 +36,13 @@ final class Open3DPCFrameDecoder {
             bottomLeft = rectangle.bottomLeft
         }
 
+        init(_ corners: [CGPoint]) {
+            topLeft = corners[0]
+            topRight = corners[1]
+            bottomRight = corners[2]
+            bottomLeft = corners[3]
+        }
+
         var corners: [CGPoint] { [topLeft, topRight, bottomRight, bottomLeft] }
 
     }
@@ -56,6 +63,21 @@ final class Open3DPCFrameDecoder {
         let result: Open3DPCVisualResult
     }
 
+    /// Two ways to find rectangles. Neither finds everything the other does: on 292 lab captures contours
+    /// read 37 codes Vision missed, mostly small ones, and missed 28 that Vision read. Contours cost less
+    /// than a Vision request, so a frame takes one search, and a frame that read nothing hands over to the
+    /// other: a code that only one of them finds is still read twice in a row.
+    enum Search {
+        case contours, vision
+        var other: Search { self == .contours ? .vision : .contours }
+    }
+    private(set) var search = Search.contours
+    /// Which codes end the hand-over; a reader sets its own options here.
+    var accepts: (Open3DPC.Validated) -> Bool = { _ in true }
+    private let coarseQuads = ContourQuads.coarse()
+    private let secondQuads = ContourQuads.second()
+    private static let clusterOverlap: CGFloat = 0.45
+
     private let context = CIContext(options: [.cacheIntermediates: false])
     private var nextSourceFrameID: UInt64 = 0
     private var nextTrackID: UInt64 = 0
@@ -75,27 +97,9 @@ final class Open3DPCFrameDecoder {
         nextSourceFrameID &+= 1
         let sourceFrameID = nextSourceFrameID
         let startedAt = CFAbsoluteTimeGetCurrent()
-        let request = VNDetectRectanglesRequest()
-        // Geometry is inferred later. Vision only supplies coarse, profile-independent quads.
-        request.minimumAspectRatio = 0.08
-        request.maximumAspectRatio = 1.0
-        request.minimumSize = 0.045
-        // A print page contains many rectangles (browser chrome, QR codes, page edges).
-        // Keep searching past those so a qualifying physical frame reaches structural validation.
-        request.maximumObservations = 48
-        request.quadratureTolerance = 35
-        if let regionOfInterest {
-            let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
-            let clipped = regionOfInterest.intersection(unit)
-            guard !clipped.isNull, clipped.width > 0, clipped.height > 0 else { return [] }
-            request.regionOfInterest = clipped
-        }
-
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
-        guard (try? handler.perform([request])) != nil,
-              let rectangles = request.results else {
-            return []
-        }
+        let unit = CGRect(x: 0, y: 0, width: 1, height: 1)
+        let region = (regionOfInterest ?? unit).intersection(unit)
+        guard !region.isNull, region.width > 0, region.height > 0 else { return [] }
 
         let source = CIImage(cvPixelBuffer: pixelBuffer)
         guard CVPixelBufferLockBaseAddress(pixelBuffer, .readOnly) == kCVReturnSuccess else { return [] }
@@ -112,20 +116,57 @@ final class Open3DPCFrameDecoder {
             width: source.extent.width * (regionOfInterest?.width ?? 1),
             height: source.extent.height * (regionOfInterest?.height ?? 1)
         )
-        let raw = rectangles.compactMap { rectangle in
-            let proposal = Proposal(rectangle)
-            return analyze(
+        guard let proposals = search == .vision
+            ? visionProposals(in: pixelBuffer, region: region) : contourProposals(in: luma, region: region) else { return [] }
+        var raw: [Observation] = []
+        for proposal in proposals {
+            // A code's outer contour and its inner opening are one code: once it validated, the
+            // clustering below would discard the other reading anyway, and it costs a frame.
+            if search == .contours, raw.contains(where: {
+                $0.physical.map(accepts) == true && overlap(bounds(of: $0.corners), bounds(of: proposal.corners)) >= Self.clusterOverlap
+            }) { continue }
+            let observation = analyze(
                 proposal: proposal,
                 source: source,
                 luma: luma,
                 sourceFrameID: sourceFrameID,
-                coarseProposalCount: rectangles.count,
+                coarseProposalCount: proposals.count,
                 roiSize: roiSize,
                 startedAt: startedAt,
                 validationGates: validationGates
             )
+            if let observation { raw.append(observation) }
         }
+        if !raw.contains(where: { $0.physical.map(accepts) == true }) { search = search.other }
         return cluster(raw, sourceFrameID: sourceFrameID)
+    }
+
+    private func contourProposals(in luma: LumaPlane, region: CGRect) -> [Proposal]? {
+        let width = CGFloat(luma.width), height = CGFloat(luma.height)
+        return coarseQuads.proposals(
+            luma: luma.base.assumingMemoryBound(to: UInt8.self),
+            width: luma.width, height: luma.height, bytesPerRow: luma.bytesPerRow,
+            region: CGRect(x: region.minX * width, y: (1 - region.maxY) * height, width: region.width * width, height: region.height * height)
+        ).map { quad in Proposal(quad.map { CGPoint(x: ($0.x + 0.5) / width, y: 1 - ($0.y + 0.5) / height) }) }
+    }
+
+    private func visionProposals(in pixelBuffer: CVPixelBuffer, region: CGRect) -> [Proposal]? {
+        let request = VNDetectRectanglesRequest()
+        // Geometry is inferred later. Vision only supplies coarse, profile-independent quads.
+        request.minimumAspectRatio = 0.08
+        request.maximumAspectRatio = 1.0
+        request.minimumSize = 0.045
+        // A print page contains many rectangles (browser chrome, QR codes, page edges).
+        // Keep searching past those so a qualifying physical frame reaches structural validation.
+        request.maximumObservations = 48
+        // Vision is only a broad proposal generator. The rectified image verifies a real
+        // continuous frame, attached marker and module lattice before it becomes a code frame.
+        // This permits an oblique physical tray without accepting a generic rectangle.
+        request.quadratureTolerance = 35
+        request.regionOfInterest = region
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, options: [:])
+        guard (try? handler.perform([request])) != nil, let results = request.results else { return nil }
+        return results.map { Proposal($0) }
     }
 
     /// Vision often returns nested versions of the same printed frame. Keep only one physical
@@ -135,7 +176,7 @@ final class Open3DPCFrameDecoder {
         var clusters: [[Observation]] = []
         for observation in observations {
             if let index = clusters.firstIndex(where: { cluster in
-                cluster.contains { overlap(observation.corners, $0.corners) >= 0.45 }
+                cluster.contains { overlap(observation.corners, $0.corners) >= Self.clusterOverlap || isSameCode(observation, $0) }
             }) {
                 clusters[index].append(observation)
             } else {
@@ -151,6 +192,14 @@ final class Open3DPCFrameDecoder {
             }) else { return nil }
             return assigningTrack(to: selected, sourceFrameID: sourceFrameID, clusteredTrackCount: clusters.count)
         }
+    }
+
+    /// One code read from its frame and again from a wider rectangle around it. Their boxes overlap too
+    /// little to cluster, and two readings in a frame confirm nothing.
+    private func isSameCode(_ lhs: Observation, _ rhs: Observation) -> Bool {
+        guard let a = lhs.physical, let b = rhs.physical, a.payload == b.payload, a.geometry == b.geometry else { return false }
+        let boxA = bounds(of: lhs.corners), boxB = bounds(of: rhs.corners)
+        return boxA.contains(CGPoint(x: boxB.midX, y: boxB.midY)) || boxB.contains(CGPoint(x: boxA.midX, y: boxA.midY))
     }
 
     private func assigningTrack(
@@ -329,7 +378,7 @@ final class Open3DPCFrameDecoder {
 
         let secondPassMark = CFAbsoluteTimeGetCurrent()
         guard let wideCrop = wideCrop(in: source, around: coarseCorners) else { return nil }
-        let secondary = secondaryQuadrilaterals(in: wideCrop)
+        let secondary = search == .vision ? secondaryQuadrilaterals(in: wideCrop) : contourQuadrilaterals(in: wideCrop.extent, of: luma)
         secondPassMilliseconds = elapsed(since: secondPassMark)
         guard !secondary.isEmpty else {
             return observation(
@@ -645,6 +694,15 @@ final class Open3DPCFrameDecoder {
             .integral
         guard crop.width >= 16, crop.height >= 16 else { return nil }
         return source.cropped(to: crop)
+    }
+
+    private func contourQuadrilaterals(in crop: CGRect, of luma: LumaPlane) -> [[CGPoint]] {
+        let height = CGFloat(luma.height)
+        return secondQuads.proposals(
+            luma: luma.base.assumingMemoryBound(to: UInt8.self),
+            width: luma.width, height: luma.height, bytesPerRow: luma.bytesPerRow,
+            region: CGRect(x: crop.minX, y: height - crop.maxY, width: crop.width, height: crop.height)
+        ).map { $0.map { CGPoint(x: $0.x + 0.5, y: height - $0.y - 0.5) } }
     }
 
     /// Finds the physical-frame candidates in the wide but still unwarped source crop. The

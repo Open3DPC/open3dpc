@@ -128,4 +128,22 @@ final class ReaderTests: XCTestCase {
             }
         }
     }
+
+    /// Small codes: the proposal has to lie on the frame, or the corner step is looked for in the margin.
+    func testSmallCodesReadAtEveryAngle() throws {
+        for (height, width, length) in [(4, 6, 14), (3, 5, 9), (10, 10, 60)] {
+            for module in [18, 34] {
+                var read = 0
+                for step in 0..<6 {
+                    let payload = (0..<length).map { ($0 * $0 * 5 + step * $0 * 3 + step) % 7 < 3 }
+                    let matrix = try XCTUnwrap(Open3DPC.encode(payload: payload, geometry: .init(height: height, width: width)))
+                    let picture = Grey(matrix, module: module, margin: 4).turned(degrees: Double(step) * 60 + 7)
+                    let found = Open3DPCReader().read(picture.image)
+                    XCTAssertTrue(found.allSatisfy { $0.payload == payload }, "\(height)×\(width) at \(module): \(found)")
+                    if found.count == 1 { read += 1 }
+                }
+                XCTAssertGreaterThanOrEqual(read, 5, "\(height)×\(width), \(module) px a module")
+            }
+        }
+    }
 }

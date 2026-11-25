@@ -18,9 +18,15 @@ the user is not aiming at, which matters when several codes sit side by side.
 
 ## 2. Coarse proposals
 
-On iOS, `VNDetectRectanglesRequest`: aspect ratio 0.08–1.0, minimum size 0.045, up to
-48 observations, quadrature tolerance 35. The Kotlin reader has its own contour
-detector with the same limits (`ContourQuads`).
+A contour detector (`ContourQuads`): connected regions under a local threshold, their hull reduced to four
+sides. Aspect ratio from 0.08, minimum size 0.045, up to 48 observations, quadrature tolerance 35.
+
+The Swift reader has a second detector with the same limits, Vision's `VNDetectRectanglesRequest`. A frame is
+searched one way; a frame that read no accepted code hands over to the other, and a still picture gets both.
+
+*Why both:* on 292 lab captures contours read 37 codes that Vision missed and missed 28 that Vision read. Vision's
+quadrilateral sits 0.2 to 0.4 `M` outside the frame of a small code, where the corner step of stage 3 looks at the
+margin and refuses it.
 
 *Why:* the detector is a proposal generator, nothing more. Geometry is inferred later,
 so the aspect range is deliberately wide rather than tuned to any profile. The
@@ -208,7 +214,7 @@ On perfect synthetic pictures the readers still refuse some codes. They did not 
 in the tests of the two paragraphs below.
 
 Of the ten pictures in `spec/fixtures`, each at 0, 3, 5, 8, 12, 20 and 33 degrees, the Swift reader reads
-eight at 7 of 7, 9999 on `4 × 6` at 6 and 38 bits on `10 × 5` at 5.
+all ten at 7 of 7.
 
 - **Payloads.** Given exact rasters with a half-module white margin, the Swift sampler reads every
   37th number from 1 to 9962 (270 numbers per shape) on `4 × 6`, `6 × 4`, `3 × 7`,
@@ -221,5 +227,10 @@ eight at 7 of 7, 9999 on `4 × 6` at 6 and 38 bits on `10 × 5` at 5.
   tight the Swift sampler returned a wrong payload for up to 11 of 336 codes, mostly on `2 × 9`, where the
   checksum has two bits. The reader aims its crop outside the frame to avoid this. Accept only the shapes
   you print, act on two frames, and prefer a longer checksum.
+
+- **Two-row codes can be misread.** Their checksum has two bits. On 448 synthetic pictures of `2 × 9` the Swift
+  reader took two for `2 × 11`; on four lab pictures (two pairs of the same two) the JavaScript reader took
+  `2 × 6` for `2 × 8`, and so would the Kotlin one.
+- **An all-zero payload** leaves few dark cells: 14 zero bits on `4 × 6` are refused.
 
 Test every code you are about to print in quantity.
