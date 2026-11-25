@@ -62,13 +62,13 @@ const code = encode('10011100001111', 4, 6);
   out('anatomy.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 494" width="860" height="494" ${font} role="img" aria-label="The parts of an Open3DPC code: quiet zone, frame, orientation square, payload, terminator, padding and checksum">${s.join('')}</svg>`);
 }
 
-// ---- logo: a real 5 × 16 code whose cells spell 3DPC, on its M/2 quiet zone
+// ---- logo: a real 7 × 34 code whose cells spell OPEN 3DPC, on its M/2 quiet zone
 {
-  const logo = encode('0110011001110100001010101010100110010101110100001010101000100110011001000', 5, 16);
+  const logo = encode('0000000000000000000000000000000000100110011101100011001100110001101010101010001010000101010101010001010110011001010001001010110010001010100010001010000101010100010000100100011101010011001100100001', 7, 34);
   const grid = darkGrid(logo);
   const path = grid.map((row, r) => row.map((dark, c) => (dark && !row[c - 1] ? `M${c} ${r}h${[...row.slice(c), 0].indexOf(0)}v1H${c}z` : '')).join('')).join('');
   const [w, h] = [grid[0].length, grid.length];
-  out('logo.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${w + 2} ${h + 2}" width="${(w + 2) * 16}" height="${(h + 2) * 16}" shape-rendering="crispEdges" role="img" aria-label="Open3DPC logo: an Open3DPC code whose cells spell 3DPC"><path fill="#fff" d="M-1-1h${w + 2}v${h + 2}H-1z"/><path fill="#111" d="${path}"/></svg>`);
+  out('logo.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 ${w + 2} ${h + 2}" width="${(w + 2) * 16}" height="${(h + 2) * 16}" shape-rendering="crispEdges" role="img" aria-label="Open3DPC logo: an Open3DPC code whose cells spell OPEN 3DPC"><path fill="#fff" d="M-1-1h${w + 2}v${h + 2}H-1z"/><path fill="#111" d="${path}"/></svg>`);
 }
 
 // The icon: the number 0 in ten bits on 4 × 4, a code that can be scanned.
