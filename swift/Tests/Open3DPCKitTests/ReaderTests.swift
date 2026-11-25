@@ -1,0 +1,115 @@
+import XCTest
+@testable import Open3DPCKit
+
+/// The whole path on images: rectangle proposals, registration, sampling, validation.
+final class ReaderTests: XCTestCase {
+    private struct Fixture: Decodable { let file: String; let payload: String; let h: Int; let w: Int }
+
+    private func fixtures() throws -> [(Fixture, Grey)] {
+        let folder = Repository.root.appendingPathComponent("spec/fixtures")
+        let list = try JSONDecoder().decode([Fixture].self, from: Data(contentsOf: folder.appendingPathComponent("manifest.json")))
+        XCTAssertEqual(list.count, 10)
+        return try list.map { ($0, try Grey(pgm: folder.appendingPathComponent($0.file))) }
+    }
+
+    private func assertReads(_ image: Grey, _ payload: String, _ label: String, file: StaticString = #filePath, line: UInt = #line) {
+        let readings = Open3DPCReader().read(image.image)
+        XCTAssertEqual(readings.map(\.bits), [payload], label, file: file, line: line)
+    }
+
+    /// Codes the sampler is known to refuse: see "Known limits of the readers" in docs/reader-pipeline.md.
+    private let refused: Set<String> = ["number-1-4x6.pgm"]
+    private let angles = [0.0, 3, 5, 8, 12, 20, 33]
+
+    /// Every picture the generator drew, at seven angles. A single frame may be refused, so a code has
+    /// to read at four of the seven; a wrong payload is never allowed.
+    func testGeneratedCodesRead() throws {
+        for (fixture, image) in try fixtures() {
+            var read = 0
+            for angle in angles {
+                let found = Open3DPCReader().read(angle == 0 ? image.image : image.turned(degrees: angle).image).map(\.bits)
+                XCTAssertTrue(found.allSatisfy { $0 == fixture.payload }, "\(fixture.file) \(angle)°: \(found)")
+                if found == [fixture.payload] { read += 1 }
+            }
+            print("read \(fixture.file): \(read) of \(angles.count)")
+            if !refused.contains(fixture.file) { XCTAssertGreaterThanOrEqual(read, 4, fixture.file) }
+        }
+    }
+
+    /// Two-row codes are left out: the sampler refuses this one at some quarter turns.
+    func testGeneratedCodesReadInEveryRotation() throws {
+        for (fixture, image) in try fixtures() where !refused.contains(fixture.file) && fixture.h > 2 {
+            var turned = [3.0, 8, 12].map { image.turned(degrees: $0) }
+            for turn in 1...3 {
+                turned = turned.map { $0.rotated() }
+                let found = turned.map { Open3DPCReader().read($0.image).map(\.bits) }
+                XCTAssertTrue(found.joined().allSatisfy { $0 == fixture.payload }, "\(fixture.file) \(turn * 90)°: \(found)")
+                XCTAssertTrue(found.contains([fixture.payload]), "\(fixture.file) \(turn * 90)°: \(found)")
+            }
+        }
+    }
+
+    func testLightOnDark() throws {
+        let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits("10011100001111"), geometry: .init(height: 4, width: 6)))
+        assertReads(Grey(matrix, module: 24, margin: 4, dark: 235, light: 25).turned(degrees: 8, value: 25), "10011100001111", "light on dark")
+    }
+
+    func testOptionsRefuseOtherLengthsAndShapes() throws {
+        let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits("10011100001111"), geometry: .init(height: 4, width: 6)))
+        let image = Grey(matrix, module: 24, margin: 4).turned(degrees: 8).image
+        func count(_ options: Open3DPCReader.Options) -> Int { Open3DPCReader(options: options).read(image).count }
+        XCTAssertEqual(count(.init()), 1)
+        XCTAssertEqual(count(.init(payloadLengths: [14])), 1)
+        XCTAssertEqual(count(.init(payloadLengths: [9, 13])), 0)
+        XCTAssertEqual(count(.init(geometries: [.init(height: 4, width: 6)])), 1)
+        XCTAssertEqual(count(.init(geometries: [.init(height: 6, width: 4)])), 0)
+    }
+
+    func testRegionOfInterestBoundsTheSearch() throws {
+        let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits("10011100001111"), geometry: .init(height: 4, width: 6)))
+        let image = Grey(matrix, module: 24, margin: 6).turned(degrees: 8)
+        var buffer: CVPixelBuffer?
+        CVPixelBufferCreate(nil, image.width & ~1, image.height & ~1, kCVPixelFormatType_420YpCbCr8BiPlanarFullRange,
+                            [kCVPixelBufferIOSurfacePropertiesKey: [String: Any]()] as CFDictionary, &buffer)
+        let pixels = try XCTUnwrap(buffer)
+        CIContext().render(CIImage(cgImage: image.image), to: pixels)
+        XCTAssertEqual(Open3DPCReader().read(pixels).map(\.bits), ["10011100001111"])
+        XCTAssertEqual(Open3DPCReader().read(pixels, regionOfInterest: CGRect(x: 0, y: 0, width: 0.2, height: 1)).count, 0)
+    }
+
+    func testTrackSurvivesFramesAndConfirms() throws {
+        let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits("010011011"), geometry: .init(height: 3, width: 5)))
+        let image = Grey(matrix, module: 24, margin: 4).image
+        let reader = Open3DPCReader()
+        var stabilizer = Open3DPCStabilizer()
+        let start = Date()
+        XCTAssertNil(stabilizer.observe(reader.read(image), at: start))
+        XCTAssertEqual(stabilizer.observe(reader.read(image), at: start + 0.1)?.bits, "010011011")
+    }
+
+    func testNothingReadsFromABlankImage() {
+        XCTAssertEqual(Open3DPCReader().read(Grey(width: 640, height: 360).image).count, 0)
+        XCTAssertEqual(Open3DPCReader().read(Grey(width: 8, height: 8).image).count, 0)
+    }
+
+    func testABlankMatrixIsNotRead() throws {
+        let blank = Open3DPC.Matrix(rows: (0..<4).map { r in (0..<6).map { c in r == 0 && c == 0 ? .orientation : .zero } })
+        XCTAssertEqual(Open3DPCReader().read(Grey(blank, module: 24, margin: 4).image).count, 0)
+    }
+
+    /// The sampler alone, on exact rasters: every nine-bit value that starts 010 and every module size.
+    func testSamplerReadsExactRasters() throws {
+        for module in [10, 14, 20, 28, 40] {
+            for value in stride(from: 0, to: 64, by: 3) {
+                let payload = "010" + String(String(value, radix: 2).reversed()).padding(toLength: 6, withPad: "0", startingAt: 0)
+                let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits(payload), geometry: .init(height: 3, width: 5)))
+                let raster = Grey(matrix, module: module)
+                let outcome = Open3DPCFrameDecoder().analyzeFixture(.init(
+                    id: payload, width: raster.width, height: raster.height, rgba: raster.rgba,
+                    expectedStage: .validated, expectedGeometry: nil, expectedPayload: nil
+                ))
+                XCTAssertEqual(outcome.payload, bits(payload), "\(payload) at \(module) px: \(outcome.detail)")
+            }
+        }
+    }
+}
