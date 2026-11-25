@@ -99,7 +99,7 @@ and nearly as long. But it stops at the `M/2` gap, and a frame side reaches its 
 its place only if at least seven of its eight side ends are material where that gap would be.
 
 *Why whole edges:* isolated modules, glyph strokes and a filled rectangle cannot
-score a four-sided ring with an opposite-colour interior.
+score a four-sided ring with an opposite-color interior.
 
 ## 7. Structural measurement, per polarity
 

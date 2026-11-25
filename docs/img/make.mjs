@@ -1,22 +1,23 @@
-// Draws logo.svg, hero.svg and anatomy.svg from the generator. Run: node docs/img/make.mjs
+// Draws every SVG of this folder except the comparisons, from the generator. Run: node docs/img/make.mjs
 import { readFileSync, writeFileSync } from 'node:fs';
 import { darkGrid, encode } from '../../generator/open3dpc.js';
 
 const out = (name, body) => writeFileSync(new URL(name, import.meta.url), body + '\n');
 const font = 'font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif"';
 const code = encode('10011100001111', 4, 6);
+const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w);
 
 // ---- hero: the code flush in a tile, drawn in axonometric projection
 {
-  const grid = darkGrid(code);
+  const grid = darkGrid(number(4242, 14, 4, 6));
   const rows = grid.length + 2;
   const columns = grid[0].length + 2;
   const project = (x, y, z) => [(x * 25 - y * 12 + 300).toFixed(1), (x * 5.2 + y * 17 - z * 24 + 70).toFixed(1)];
   const face = (points, fill) => `<path fill="${fill}" d="M${points.map((p) => project(...p).join(' ')).join('L')}Z"/>`;
   const shapes = [
-    face([[0, rows, 0], [columns, rows, 0], [columns, rows, -1.6], [0, rows, -1.6]], '#c9c6bd'),
-    face([[columns, 0, 0], [columns, rows, 0], [columns, rows, -1.6], [columns, 0, -1.6]], '#aeaba2'),
-    face([[0, 0, 0], [columns, 0, 0], [columns, rows, 0], [0, rows, 0]], '#f6f4ee'),
+    face([[0, rows, 0], [columns, rows, 0], [columns, rows, -1.6], [0, rows, -1.6]], '#d9452b'),
+    face([[columns, 0, 0], [columns, rows, 0], [columns, rows, -1.6], [columns, 0, -1.6]], '#b93720'),
+    face([[0, 0, 0], [columns, 0, 0], [columns, rows, 0], [0, rows, 0]], '#ff5a3c'),
   ];
   let dark = '';
   grid.forEach((row, r) => {
@@ -28,8 +29,8 @@ const code = encode('10011100001111', 4, 6);
       c = end;
     }
   });
-  shapes.push(`<path fill="#1b2022" d="${dark}"/>`);
-  out('hero.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 430" width="820" height="430" role="img" aria-label="A drawing of a two-colour tile with an Open3DPC code holding the number 9999"><rect width="820" height="430" rx="16" fill="#dfe4dc"/><g transform="translate(66 2) scale(.88)">${shapes.join('')}</g></svg>`);
+  shapes.push(`<path fill="#fdfcf8" d="${dark}"/>`);
+  out('hero.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 430" width="820" height="430" role="img" aria-label="A drawing of a two-color tile with an Open3DPC code holding the number 4242"><rect width="820" height="430" rx="16" fill="#e3e7e3"/><g transform="translate(66 2) scale(.88)">${shapes.join('')}</g></svg>`);
 }
 
 // ---- anatomy
@@ -88,4 +89,18 @@ const code = encode('10011100001111', 4, 6);
   const icon = `<g transform="scale(1.25)"><rect width="16" height="16" rx="2.6" fill="#ff5a3c"/><path transform="translate(2 2)" fill="#fff" d="${paths('0'.repeat(10), 4, 4)}"/></g>`;
   for (const [name, paper, ink] of [['light', '#fff', '#111'], ['dark', '#111', '#fff']])
     out(`lockup-${name}.svg`, `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 20" width="784" height="160" shape-rendering="crispEdges" role="img" aria-label="Open3DPC">${icon}<g transform="translate(25 1)"><path fill="${paper}" d="M-1-1h74v20H-1z"/><path fill="${ink}" d="${paths(long, 7, 34)}"/></g></svg>`);
+}
+
+// ---- ideas: six objects, each with a real code
+{
+  const ideas = [[417, 4, 6, '#ff5a3c', '#fff'], [88, 6, 4, '#22302c', '#f6c945'], [12, 4, 4, '#0f6e68', '#f2efe4'], [2048, 4, 6, '#f4f3ee', '#17191a'], [31, 5, 5, '#c9d6f2', '#1f2c55'], [1306, 4, 6, '#25314f', '#fff']];
+  const names = ['Filament spools', 'Tool drawers', 'Board games', 'Key tags', 'Moving boxes', 'Printed parts'];
+  const tiles = ideas.map(([n, h, w, paper, ink], i) => {
+    const grid = darkGrid(number(n, h === 4 && w === 4 ? 9 : 14, h, w));
+    const k = 130 / Math.max(grid.length, grid[0].length);
+    const [x, y] = [(i % 3) * 276, Math.floor(i / 3) * 236];
+    const path = grid.map((row, r) => row.map((dark, c) => (dark && !row[c - 1] ? `M${c} ${r}h${[...row.slice(c), 0].indexOf(0)}v1H${c}z` : '')).join('')).join('');
+    return `<rect x="${x}" y="${y}" width="264" height="190" rx="10" fill="${paper}"/><g transform="translate(${x + 132 - (grid[0].length * k) / 2} ${y + 95 - (grid.length * k) / 2}) scale(${k})"><path shape-rendering="crispEdges" fill="${ink}" d="${path}"/></g><text x="${x + 132}" y="${y + 214}" text-anchor="middle" font-size="17" fill="#7d8590">${names[i]}</text>`;
+  });
+  out('ideas.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 816 460" width="816" height="460" ${font} role="img" aria-label="Six objects with codes: ${names.join(', ').toLowerCase()}">${tiles.join('')}</svg>`);
 }

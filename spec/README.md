@@ -1,6 +1,6 @@
 # Open3DPC specification
 
-Open3D Print Code (Open3DPC) is a compact binary visual code for two-colour
+Open3D Print Code (Open3DPC) is a compact binary visual code for two-color
 3D-printed objects. Why it looks the way it does is in
 [docs/concept.md](../docs/concept.md); this directory is the normative part.
 

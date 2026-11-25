@@ -1,9 +1,9 @@
 # Open3DPC: a code that prints as part of the object
 
-Open3DPC (Open 3D Print Code) is a small two-colour binary code made to be printed
-into an object on a two-colour or multicolour FDM 3D printer, rather than stuck on
-as a label. Two colours are what make the code readable: it needs contrast. The
-simplest setup is a printer that switches filament automatically; a colour change
+Open3DPC (Open 3D Print Code) is a small two-color binary code made to be printed
+into an object on a two-color or multicolor FDM 3D printer, rather than stuck on
+as a label. Two colors are what make the code readable: it needs contrast. The
+simplest setup is a printer that switches filament automatically; a color change
 between layers also works, but takes more care.
 
 It was made for the [Enforso](https://enforso.com) apps, which use it on numbered

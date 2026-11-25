@@ -1,120 +1,70 @@
-<p align="center"><img src="docs/img/logo.svg" width="640" alt="Open3DPC logo: an Open3DPC code whose cells spell OPEN 3DPC"></p>
+<h1 align="center"><picture>
+<source media="(prefers-color-scheme: dark)" srcset="docs/img/lockup-dark.svg">
+<img src="docs/img/lockup-light.svg" width="560" alt="Open3DPC">
+</picture></h1>
 
-<p align="center"><img src="docs/img/hero.svg" width="640" alt="A drawing of a two-colour tile with an Open3DPC code holding the number 9999"></p>
+<p align="center"><b>A tiny two-color code made especially for 3D printing.</b><br>
+Print a code into anything. Scan it with a phone.</p>
 
-<h1 align="center">Open3DPC</h1>
-<p align="center"><b>A code that prints as part of the object.</b><br>
-An open two-colour code for FDM 3D printers, read by a phone camera.</p>
+<p align="center"><img src="docs/img/hero.svg" width="640" alt="A drawing of a two-color tile with an Open3DPC code holding the number 4242"></p>
 
-<p align="center">
-<a href="docs/concept.md">Concept</a> ·
-<a href="spec/v2.md">Specification</a> ·
-<a href="generator/">Generator</a> ·
-<a href="docs/web.md">Web</a> ·
-<a href="docs/ios.md">iOS</a> ·
-<a href="docs/android.md">Android</a> ·
-<a href="CONTRIBUTING.md">Contributing</a>
-</p>
+<h3 align="center"><a href="generator/">Make</a> &nbsp;·&nbsp; <a href="generator/scan/">Scan</a> &nbsp;·&nbsp; <a href="#build">Build</a></h3>
 
----
+It is printed as part of the object: no ink, no sticker, and no dot as small as your printer's limit.
+A phone reads it in the browser, with nothing to install. The code holds a number; what it opens is up
+to your app.
 
-QR and Data Matrix were designed for paper and ink. On an FDM printer their small stand-alone squares
-are the hardest thing to make. Open3DPC (Open 3D Print Code) has none at the printer's limit: its
-thinnest part is a continuous frame, and the smallest stand-alone element is twice as wide.
+<p align="center"><img src="docs/img/ideas.svg" width="720" alt="Six objects with codes: filament spools, tool drawers, board games, key tags, moving boxes, printed parts"></p>
 
-<p align="center"><img src="docs/img/anatomy.svg" width="720" alt="The parts of an Open3DPC code"></p>
+## Build
 
-| The number 9999, thinnest feature 0.8 mm | Size with quiet zone | Dark shapes | Single 0.8 mm dots |
-|---|---:|---:|---:|
-| Data Matrix 10 × 10 | 9.6 × 9.6 mm | 9 | 7 |
-| Micro QR M1 | 12 × 12 mm | 11 | 2 |
-| **Open3DPC 4 × 6** | **14.4 × 11.2 mm** | **5** | **0** |
-| QR version 1 | 23.2 × 23.2 mm | 39 | 15 |
+### Ask your agent
 
-It is not the smallest code; it is the one with no single dots. When the stand-alone elements are made
-equal, the QR code takes 13.3 times the area, Micro QR 3.6 and Data Matrix 2.3.
-[The whole comparison](docs/concept.md#why-not-a-qr-code).
-
-- **Small and scalable.** Any number of bits, any rectangle that holds them. The module follows your nozzle.
-- **Detects, does not guess.** A checksum of one to ten bits and no error correction: a damaged code is
-  rejected.
-- **Any way up.** Four rotations, dark on light or light on dark.
-- **Yours.** The code holds bits and their count. What they mean is up to your application.
-
-## Make a code
-
-Open the [generator](generator/) (a static page, everything runs in the browser; to run it from a clone:
-`cd generator && python3 -m http.server`). Enter a number, choose a shape, download the STL.
-Print it in two filaments with strong contrast and keep the quiet zone clear.
-
-From JavaScript, with no dependencies:
-
-```js
-import { encode, bitsFromInteger, svg, stl } from './generator/open3dpc.js';
-
-const code = encode(bitsFromInteger(9999, 14), 4, 6);   // 4 rows × 6 columns
-code.rows;                                              // [ 'O10011', '110001', '011110', '100001' ]
-svg(code);                                              // exact, in millimetres
-stl(code, { materialHeight: 0.6 });                     // Uint8Array, the dark material
+```text
+Add an Open3DPC scanner to this app. Read https://github.com/romanaerl/open3dpc/blob/main/docs/web.md,
+use the reader it describes, accept only 14-bit codes, and call onCode(number) when one is confirmed.
 ```
 
-## Read a code
+### Or write it
 
-In a browser, nothing to install: the [scanner page](generator/scan/) opens the phone's camera and reads.
-JavaScript, with no dependencies ([guide](docs/web.md)):
+Read a code ([guide](docs/web.md)), with no dependencies:
 
 ```js
+import { Frame, Open3DPCReader } from './open3dpc-reader.js';
+
 const reader = new Open3DPCReader({ payloadLengths: [14] });
-reader.read(Frame.fromImageData(imageData))[0]?.value;   // 9999n
+reader.read(Frame.fromImageData(image))[0]?.value;   // 4242n
 ```
 
-Swift, iOS 15 and later ([guide](docs/ios.md), [camera example](examples/ios/Open3DPCScannerView.swift)):
+Make one, ready to slice in two filaments with strong contrast:
 
-```swift
-let reader = Open3DPCReader(options: .init(payloadLengths: [14]))
-var stabilizer = Open3DPCStabilizer()
-if let code = stabilizer.observe(reader.read(pixelBuffer, regionOfInterest: viewfinder)) {
-    print(code.value!)                                  // 9999
-}
+```js
+import { encode, bitsFromInteger, stl } from './open3dpc.js';
+
+stl(encode(bitsFromInteger(4242, 14), 4, 6));        // Uint8Array, the dark material
 ```
 
-Kotlin, Android and JVM ([guide](docs/android.md), [camera example](examples/android/Open3DPCCamera.kt)):
+Also for [iOS](docs/ios.md) (Swift) and [Android](docs/android.md) (Kotlin). Neither needs a vision
+library of its own.
 
-```kotlin
-val reader = Open3DPCReader(payloadLengths = setOf(14))
-val stabilizer = Open3DPCStabilizer()
-stabilizer.observe(reader.read(frame, viewfinder), nowMs)?.let { println(it.value) }   // 9999
-```
+## Learn more
 
-None needs a vision library of its own: each finds its own rectangles, and the Swift reader also asks
-Apple's Vision.
-
-## What is here
-
-| Path | What |
+| I want to | Go to |
 |---|---|
-| [docs/concept.md](docs/concept.md) | What Open3DPC is, why, and the comparison with QR, Micro QR and Data Matrix |
-| [spec/](spec/) | The specification, v2, with [test vectors](spec/vectors/v2.json) |
-| [generator/](generator/) | The generator page, the [browser scanner](generator/scan/) ([guide](docs/web.md)) and the JavaScript under both |
-| [swift/](swift/) | `Open3DPCKit`, the Swift package ([guide](docs/ios.md)) |
-| [kotlin/](kotlin/) | The Kotlin library ([guide](docs/android.md)) |
-| [examples/](examples/) | Minimal camera scanners for both |
-| [docs/reader-pipeline.md](docs/reader-pipeline.md) | How the readers work, stage by stage, and their limits |
+| Understand why it is not a QR code | [Concept](docs/concept.md#why-not-a-qr-code) |
+| Make codes on my own machine | [generator/](generator/): `cd generator && python3 -m http.server` |
+| Write my own reader | [Specification](spec/v2.md) and [test vectors](spec/vectors/v2.json) |
+| Know how the readers work, and where they fail | [Reader pipeline](docs/reader-pipeline.md#known-limits-of-the-readers) |
+| Know what is not measured yet | [Limits](docs/concept.md#what-has-not-been-measured) |
+| Help | [Contributing](CONTRIBUTING.md) |
 
 ## Status
 
-The format is v2 and settled. It comes from the [Enforso](https://enforso.com) apps, where it marks
-printed stickers; the readers here were extracted from them. The libraries are young and unreleased,
-and their API may change.
-
-Every part passes the test vectors. The generator's matrix, SVG and STL are byte for byte those of the
-PHP generator it was ported from, apart from a label, a rendering hint and the STL header. Both readers
-decode pictures the generator draws, with [known refusals](docs/reader-pipeline.md#known-limits-of-the-readers).
-
-**Not measured:** print accuracy, reading distance and success rate on real prints and phones, and
-whether the minimum quiet zone is enough everywhere ([details](docs/concept.md#what-has-not-been-measured)).
-
-## Licence
+The format is v2 and settled. It is used in the [Enforso](https://enforso.com) apps, where it marks
+printed stickers; the Swift and Kotlin readers were extracted from them. The libraries are young and
+unreleased, and their API may change. Every part passes the test vectors. Print accuracy, reading
+distance and success rate on real prints are [not measured](docs/concept.md#what-has-not-been-measured).
 
 Code and test vectors: [Apache 2.0](LICENSE). Specification, documentation and figures:
 [CC BY 4.0](LICENSE-docs). Neither licence covers the name Open3DPC as a trade mark.
+QR Code is a registered trademark of DENSO WAVE INCORPORATED.
