@@ -6,9 +6,8 @@ as a label. Two colours are what make the code readable: it needs contrast. The
 simplest setup is a printer that switches filament automatically; a colour change
 between layers also works, but takes more care.
 
-It was made for the [Enforso](https://enforso.com) apps, which use it on PillDone
-pill boxes: each compartment carries its own code, and scanning it closes that
-compartment's reminder. Nothing in the format is specific to that use.
+It was made for the [Enforso](https://enforso.com) apps, which use it on numbered
+printed stickers. Nothing in the format is specific to that use.
 
 ![The parts of an Open3DPC code](img/anatomy.svg)
 

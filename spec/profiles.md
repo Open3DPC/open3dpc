@@ -48,8 +48,8 @@ unrelated applications may both use fourteen bits. An application that can meet
 other people's codes should expect that, and treat a decoded value as a key into
 its own data, never as proof of origin.
 
-For information: the [Enforso](https://enforso.com) apps use length 9 for
-pill-box compartments and length 14 for numbered stickers.
+For information: the [Enforso](https://enforso.com) apps use lengths 9 and 14,
+the latter for numbered stickers.
 
 ## 4. Defining a profile
 

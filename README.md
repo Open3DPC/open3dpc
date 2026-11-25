@@ -94,8 +94,8 @@ its own rectangles.
 
 ## Status
 
-The format is v2 and settled. It comes from the [Enforso](https://enforso.com) apps, where it marks pill
-boxes and stickers; the readers here were extracted from them. The libraries are young and unreleased,
+The format is v2 and settled. It comes from the [Enforso](https://enforso.com) apps, where it marks
+printed stickers; the readers here were extracted from them. The libraries are young and unreleased,
 and their API may change.
 
 Every part passes the test vectors. The generator's matrix, SVG and STL are byte for byte those of the
