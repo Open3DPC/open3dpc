@@ -1,7 +1,7 @@
-# Publishes the npm packages `open3dpc` and then `open3dpc-cli` when a tag vX.Y.Z is pushed, through npm's
-# trusted publishing: no token is stored here. Nothing happens until each package is linked to this
-# repository and this workflow on npmjs.com (package settings, Trusted publishing). The tag must match
-# both package.json files.
+# Stages the npm packages `open3dpc` and then `open3dpc-cli` when a tag vX.Y.Z is pushed, through npm's
+# trusted publishing: no token is stored here. Each package is linked on npmjs.com to this repository and
+# this workflow, stage-only: a staged version goes out once the maintainer approves it on npmjs.com with
+# his security key. The tag must match both package.json files.
 name: npm
 on:
   push:
@@ -24,6 +24,8 @@ jobs:
           test "v$(node -p "require('./cli/package.json').version")" = "$GITHUB_REF_NAME"
       - run: npm test
       - run: cli/test/run.sh
-      - run: npm publish --provenance --access public
-      - run: npm publish --provenance --access public
+      - name: npm with staged publishing
+        run: npm install -g npm@^11.15.0
+      - run: npm stage publish --access public
+      - run: npm stage publish --access public
         working-directory: cli
