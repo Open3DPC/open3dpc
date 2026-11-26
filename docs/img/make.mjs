@@ -104,3 +104,69 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
   });
   out('ideas.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 816 460" width="816" height="460" ${font} role="img" aria-label="Six objects with codes: ${names.join(', ').toLowerCase()}">${tiles.join('')}</svg>`);
 }
+
+// ---- the nozzle's path: 9999 as the smallest standard QR code and as Open3DPC 4 × 6, 0.8 mm thinnest feature.
+// On a 0.2 mm grid every loop runs along the middle of a 0.4 mm line, 0.2, 0.6 and 1.0 mm in from the edge.
+{
+  // QR version 1, numeric mode, level L, holding 9999: the code in comparison-thinnest-line.svg.
+  const qr = ['#######.##..#.#######', '#.....#..#..#.#.....#', '#.###.#.#.#.#.#.###.#', '#.###.#.#..#..#.###.#', '#.###.#.###...#.###.#',
+    '#.....#.......#.....#', '#######.#.#.#.#######', '.........##..........', '####..#.#.#..#..###.#', '##...#.##...#..#...##', '#.#.#.##..#.#####..##',
+    '.#..##...##.##.....##', '##....##.###.#..#.###', '........##...#.#..##.', '#######...#..##.#.##.', '#.....#..######..#.#.', '#.###.#..###..#..#..#',
+    '#.###.#.#....#..#..#.', '#.###.#.#.##.#..###..', '#.....#.#####.#.##.##', '#######.##.##..#.#.#.'].map((r) => [...r].map((c) => (c === '#' ? 1 : 0)));
+  const up = (g, k) => g.flatMap((r) => Array.from({ length: k }, () => r.flatMap((v) => Array(k).fill(v))));
+  // A square step, as a slicer offsets a rectilinear outline.
+  const erode = (g) => g.map((r, y) => r.map((v, x) => {
+    if (!v) return 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) if (!g[y + dy]?.[x + dx]) return 0;
+    return 1;
+  }));
+  // The outlines of a region, each a closed list of grid corners with the region on the left.
+  const contours = (g) => {
+    const next = new Map();
+    const key = (x, y) => `${x},${y}`;
+    const add = (a, b) => { const k = key(...a); if (!next.has(k)) next.set(k, []); next.get(k).push(b); };
+    g.forEach((row, y) => row.forEach((v, x) => {
+      if (!v) return;
+      if (!g[y - 1]?.[x]) add([x + 1, y], [x, y]);
+      if (!g[y + 1]?.[x]) add([x, y + 1], [x + 1, y + 1]);
+      if (!row[x - 1]) add([x, y], [x, y + 1]);
+      if (!row[x + 1]) add([x + 1, y + 1], [x + 1, y]);
+    }));
+    const loops = [];
+    for (const [k, outs] of next) while (outs.length) {
+      let [x, y] = k.split(',').map(Number);
+      let dir = null;
+      const pts = [[x, y]];
+      let [nx, ny] = outs.pop();
+      for (;;) {
+        const d = [nx - x, ny - y];
+        if (!dir || d[0] !== dir[0] || d[1] !== dir[1]) pts.push([x, y]);
+        dir = d; x = nx; y = ny;
+        if (key(x, y) === k) break;
+        const o = next.get(key(x, y));
+        const pick = o.length > 1 ? o.findIndex(([a, b]) => dir[0] * (b - y) - dir[1] * (a - x) < 0) : 0;
+        [nx, ny] = o.splice(Math.max(0, pick), 1)[0];
+      }
+      pts.shift();
+      loops.push(pts);
+    }
+    return loops;
+  };
+  const draw = (grid, quiet, x0, name, size) => {
+    let g = erode(up(grid, 4));
+    const pad = quiet * 4;
+    const w = grid[0].length * 4 + 2 * pad;
+    const h = grid.length * 4 + 2 * pad;
+    let d = '';
+    let total = 0;
+    for (let level = 0; level < 3 && g.some((r) => r.includes(1)); level++) {
+      for (const pts of contours(g)) { total++; d += `M${pts.map(([x, y]) => `${x + pad} ${y + pad}`).join('L')}Z`; }
+      g = erode(erode(g));
+    }
+    const y0 = 116 - h;
+    return { total, svg: `<g transform="translate(${x0} ${y0})"><rect width="${w}" height="${h}" rx="3" fill="#18245f"/><path fill="none" stroke="#e6e8ea" stroke-width="1.55" stroke-linejoin="round" d="${d}"/></g><text x="${x0}" y="132" font-size="9" font-weight="700" fill="#15191a">${total} loops</text><text x="${x0}" y="144" font-size="6.5" fill="#5d6562">${name}, ${size}</text>` };
+  };
+  const a = draw(qr, 4, 8, 'QR version 1', '23.2 × 23.2 mm');
+  const b = draw(darkGrid(encode('10011100001111', 4, 6)), 1, 140, 'Open3DPC 4 × 6', '14.4 × 11.2 mm');
+  out('nozzle-loops.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 152" width="756" height="456" ${font} role="img" aria-label="The path of a 0.4 mm nozzle for 9999: ${a.total} loops in the QR code, ${b.total} in Open3DPC"><rect width="252" height="152" rx="6" fill="#ffffff"/>${a.svg}${b.svg}</svg>`);
+}

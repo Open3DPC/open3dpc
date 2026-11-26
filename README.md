@@ -45,6 +45,28 @@ reader and the printed object stays easy to make:
 - **The size follows your printer.** Any number of rows and columns that hold your payload, at the module
   your nozzle prints cleanly.
 
+### What the printer sees
+
+Every closed line below is one loop of a 0.4 mm nozzle: it starts, goes round and stops, and every start
+and stop is a chance for a blob or a string. Same number, same 0.8 mm thinnest feature, one scale:
+
+<p align="center"><img src="docs/img/nozzle-loops.svg" width="640" alt="The path of a 0.4 mm nozzle for 9999: 59 loops in the QR code, 12 in Open3DPC"></p>
+
+The same in a slicer, on 20 × 20 mm tiles with a 0.8 mm thinnest feature, two lines of a 0.4 mm nozzle.
+On the left the QR code, short loops around every single square; in the middle Open3DPC 5 × 5 stretched
+to the same size, a few long loops; on the right Open3DPC 4 × 5 at the size it needs.
+
+<p align="center">
+<img src="docs/img/slicer-qr.jpg" width="32%" alt="Slicer preview of the QR code holding 9999: many short loops around single squares">
+<img src="docs/img/slicer-open3dpc.jpg" width="32%" alt="Slicer preview of Open3DPC 5 × 5 holding 9999, stretched to the QR code's size: a few long loops">
+<img src="docs/img/slicer-open3dpc-own-size.jpg" width="32%" alt="Slicer preview of Open3DPC 4 × 5 holding 9999 at its own size">
+</p>
+
+Fewer, longer loops and no square at the printer's limit: the code comes out clean on an ordinary
+printer, and it is what the phone needs to read it.
+
+### And it is smaller
+
 <p align="center"><img src="docs/img/comparison-thinnest-line.svg" width="560" alt="The number 9999 as QR, Open3DPC, Micro QR and Data Matrix codes, all with a 0.8 mm thinnest feature"></p>
 
 | 9999, thinnest feature 0.8 mm | Size with quiet zone | Dark shapes | Single 0.8 mm dots |
