@@ -1,7 +1,7 @@
 # open3dpc-cli
 
 The `open3dpc` command: read [Open3DPC](https://open3dpc.org) codes from photos and whole folders, and
-make the files to print one. It runs on Node.js 18.17 or later, on macOS, Linux and Windows.
+make the files to print one. It runs on Node.js 20.9 or later, on macOS, Linux and Windows.
 
 ```bash
 npx open3dpc-cli scan photo.jpg
@@ -26,7 +26,9 @@ parts/IMG_0413.jpg    no code
 ```
 
 JPEG, PNG, WebP, AVIF, TIFF and GIF are read everywhere. iPhone HEIC photos are read on macOS, which
-converts them; elsewhere convert them to JPEG first. A photo is read whole, then at a smaller size, as
+converts them; elsewhere convert them to JPEG first. A file is taken by its first bytes, not its name:
+anything else, an SVG or a PDF renamed `.jpg` included, is refused rather than opened, and pictures over
+268 megapixels are refused too. A photo is read whole, then at a smaller size, as
 the [scan page](https://open3dpc.org/scan) does.
 
 Set `--shape` and `--bits` to what your codes are: fewer accepted shapes and lengths mean fewer false

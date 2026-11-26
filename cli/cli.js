@@ -2,9 +2,9 @@
 // open3dpc: read Open3DPC codes from photos and make codes to print, from the command line.
 // Copyright 2026 Roman Simonov. Licensed under the Apache License, Version 2.0.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
+import { closeSync, mkdtempSync, openSync, readFileSync, readSync, readdirSync, rmSync, statSync, writeFileSync, mkdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { basename, extname, join, relative, resolve } from 'node:path';
+import { extname, join, relative, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import sharp from 'sharp';
 import {
@@ -41,8 +41,32 @@ More: https://open3dpc.org`;
 
 /** A path to print: relative when it is under the current folder. */
 const shown = (path) => { const near = relative(process.cwd(), path); return near && !near.startsWith('..') ? near : path; };
+/** Control and direction characters in a file name or message would steer the terminal: shown as `?`. */
+const printable = (text) => text.replace(/[\u0000-\u001f\u007f-\u009f\u200e\u200f\u202a-\u202e\u2066-\u2069]/g, '?');
 
-const PHOTO = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.avif', '.tif', '.tiff', '.gif', '.bmp']);
+const PHOTO = new Set(['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif', '.avif', '.tif', '.tiff', '.gif']);
+
+/**
+ * The picture format by its first bytes, whatever the file is called; null for anything else. Only these
+ * reach the image decoder: an SVG, PDF or other document renamed .jpg is refused, not rendered.
+ */
+function formatOf(file) {
+  const head = Buffer.alloc(16);
+  const descriptor = openSync(file, 'r');
+  try { readSync(descriptor, head, 0, 16, 0); } finally { closeSync(descriptor); }
+  const ascii = (from, to) => head.toString('latin1', from, to);
+  if (head[0] === 0xff && head[1] === 0xd8 && head[2] === 0xff) return 'jpeg';
+  if (ascii(0, 8) === '\x89PNG\r\n\x1a\n') return 'png';
+  if (ascii(0, 4) === 'GIF8') return 'gif';
+  if (ascii(0, 4) === 'RIFF' && ascii(8, 12) === 'WEBP') return 'webp';
+  if (ascii(0, 4) === 'II*\0' || ascii(0, 4) === 'MM\0*') return 'tiff';
+  if (ascii(4, 8) === 'ftyp') {
+    const brand = ascii(8, 12);
+    if (['avif', 'avis'].includes(brand)) return 'avif';
+    if (['heic', 'heix', 'hevc', 'hevx', 'heim', 'heis', 'mif1', 'msf1'].includes(brand)) return 'heif';
+  }
+  return null;
+}
 
 class Usage extends Error {}
 
@@ -99,7 +123,7 @@ function photosIn(path) {
 /** As the scan page does: the whole photo at 2000 px first, then at 900 px — a large sharp code reads better smaller. */
 async function readPhoto(file, options, why) {
   let source;
-  try { source = await decodable(file); } catch (error) { return { file, codes: [], error: error.message }; }
+  try { source = await decodable(file); } catch (error) { return { file, codes: [], error: error.code === 'EISDIR' || error.code === 'EACCES' || error.code === 'ENOENT' ? `cannot open it (${error.code})` : error.message }; }
   const best = { stage: null };
   try {
     const picture = source.path ?? file;
@@ -137,17 +161,20 @@ function remember(best, observations) {
  * The file itself, or for an iPhone HEIC that this build of sharp cannot open, a JPEG copy made by macOS `sips`.
  */
 async function decodable(file) {
+  const format = formatOf(file);
+  if (!format) throw new Error('not a photo: JPEG, PNG, WebP, HEIC, AVIF, TIFF or GIF');
   try {
     // Opening the header is not enough: sharp reads an iPhone HEIC's header and then cannot decode it.
     await sharp(file).resize(8, 8).raw().toBuffer();
     return {};
   } catch (error) {
-    if (!['.heic', '.heif'].includes(extname(file).toLowerCase())) throw new Error(`could not read it as a picture (${error.message})`);
+    if (format !== 'heif') throw new Error(`could not read it as a picture (${error.message})`);
     if (process.platform !== 'darwin') throw new Error('HEIC photos need macOS, or convert them to JPEG first');
     const folder = mkdtempSync(join(tmpdir(), 'open3dpc-'));
-    const path = join(folder, `${basename(file, extname(file))}.jpg`);
+    const path = join(folder, 'photo.jpg');
     try {
-      execFileSync('sips', ['-s', 'format', 'jpeg', file, '--out', path], { stdio: 'ignore' });
+      // An absolute path, so that a file named like an option is still a file; no shell is involved.
+      execFileSync('/usr/bin/sips', ['-s', 'format', 'jpeg', resolve(file), '--out', path], { stdio: 'ignore', timeout: 60000 });
     } catch {
       rmSync(folder, { recursive: true, force: true });
       throw new Error('could not convert this HEIC photo');
@@ -157,8 +184,8 @@ async function decodable(file) {
 }
 
 function line({ file, codes, error, why }) {
-  const name = shown(file);
-  if (error) return `${name}\terror: ${error}`;
+  const name = printable(shown(file));
+  if (error) return `${name}\terror: ${printable(error)}`;
   if (!codes.length) return `${name}\tno code${why ? ` (${why})` : ''}`;
   return codes.map((c) => `${name}\t${c.shape}\t${c.value ?? '(empty)'}\t${c.bits}`).join('\n');
 }

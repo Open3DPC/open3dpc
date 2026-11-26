@@ -90,6 +90,20 @@ test('shapes lists the shapes that hold a payload', () => {
   assert.match(lines[1], /^4x5\tchecksum 4 bits\t12\.8 x 11\.2 mm/);
 });
 
+test('a file that only pretends to be a photo is refused, and a name cannot steer the terminal', () => {
+  mkdirSync(join(work, 'odd'));
+  writeFileSync(join(work, 'odd/drawing.jpg'), '<svg xmlns="http://www.w3.org/2000/svg"><image href="file:///etc/passwd"/></svg>');
+  writeFileSync(join(work, 'odd/paper.png'), '%PDF-1.4');
+  writeFileSync(join(work, 'odd/esc\u001b[31m.jpg'), readFileSync(join(work, 'photos/empty.jpg')));
+  const { status, out } = run('scan', 'odd');
+  assert.equal(status, 2);
+  assert.deepEqual(out.split('\n'), [
+    'odd/drawing.jpg\terror: not a photo: JPEG, PNG, WebP, HEIC, AVIF, TIFF or GIF',
+    'odd/esc?[31m.jpg\tno code',
+    'odd/paper.png\terror: not a photo: JPEG, PNG, WebP, HEIC, AVIF, TIFF or GIF',
+  ]);
+});
+
 test('mistakes exit 2 with one line on stderr', () => {
   for (const args of [[], ['scan'], ['scan', 'missing.jpg'], ['make', 'abc'], ['make', '12', '--shape', '2x3'], ['make', '9', '--bits', '1'], ['scan', 'photos', '--shape', '4by6'], ['fly']]) {
     const { status, err } = run(...args);
