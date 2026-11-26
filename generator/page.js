@@ -156,9 +156,24 @@ form.addEventListener('input', (event) => {
     $('shapes').querySelector(`[value="${focus}"]`)?.focus();
     return;
   }
+  if (event.target.name === 'mode') convert(event.target.value);
   labels();
   render();
 });
+/** Switching between a number and bits keeps the payload: the value is rewritten in the other form. */
+function convert(mode) {
+  const field = form.elements.value;
+  const text = field.value.replace(/\s+/g, '');
+  try {
+    if (mode === 'binary' && /^\d+$/.test(text)) {
+      const length = Number(form.elements.bits.value) || 0;
+      field.value = o.bitsFromInteger(text, length);
+    } else if (mode === 'integer' && /^[01]+$/.test(text)) {
+      field.value = BigInt(`0b${text}`).toString();
+      form.elements.bits.value = text.length; // the length is part of the payload
+    }
+  } catch { /* a number longer than its fixed length stays as typed, and the page says why */ }
+}
 function labels() {
   const binary = form.elements.mode.value === 'binary';
   $('valueLabel').textContent = binary ? 'Bits' : 'Number';
