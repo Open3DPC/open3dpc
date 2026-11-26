@@ -172,15 +172,15 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
 }
 
 // ---- one number, many shapes: 9999 as the smallest standard QR code and as Open3DPC from square to long,
-// one scale, quiet zone included, 0.8 mm thinnest feature (1.6 mm module). Three rows or more: a longer
-// checksum than the two-row shapes, which also hold 9999.
+// one scale, quiet zone included, 0.8 mm thinnest feature (1.6 mm module). The last has two rows, and a
+// two-bit checksum.
 {
   const k = 6;                                        // drawing units per millimetre
   const qrGrid = ['#######.##..#.#######', '#.....#..#..#.#.....#', '#.###.#.#.#.#.#.###.#', '#.###.#.#..#..#.###.#', '#.###.#.###...#.###.#',
     '#.....#.......#.....#', '#######.#.#.#.#######', '.........##..........', '####..#.#.#..#..###.#', '##...#.##...#..#...##', '#.#.#.##..#.#####..##',
     '.#..##...##.##.....##', '##....##.###.#..#.###', '........##...#.#..##.', '#######...#..##.#.##.', '#.....#..######..#.#.', '#.###.#..###..#..#..#',
     '#.###.#.#....#..#..#.', '#.###.#.#.##.#..###..', '#.....#.#####.#.##.##', '#######.##.##..#.#.#.'];
-  const shapes = [[5, 5], [4, 6], [3, 8], [3, 12], [3, 16]];
+  const shapes = [[5, 5], [4, 6], [3, 8], [3, 12], [2, 16]];
   const base = 23.2 * k + 8;                          // the bottom line all codes stand on: below the QR code, the tallest
   let x = 12;
   const parts = [];
@@ -202,5 +202,5 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
     x += W + 22;
   }
   const width = Math.ceil(x - 10);
-  out('shapes.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${base + 76}" width="${width}" height="${base + 76}" ${font} role="img" aria-label="9999 as a QR code, always a square, and as Open3DPC in five shapes from 5 × 5 to 3 × 16, at one scale"><rect width="${width}" height="${base + 76}" rx="10" fill="#f7f8f6"/><g transform="translate(0 12)">${parts.join('')}<text x="12" y="${base + 58}" font-size="12" font-weight="700" fill="#15191a">Encoded payload: 9999 (integer)</text></g></svg>`);
+  out('shapes.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${base + 76}" width="${width}" height="${base + 76}" ${font} role="img" aria-label="9999 as a QR code, always a square, and as Open3DPC in five shapes from 5 × 5 to 2 × 16, at one scale"><rect width="${width}" height="${base + 76}" rx="10" fill="#f7f8f6"/><g transform="translate(0 12)">${parts.join('')}<text x="12" y="${base + 58}" font-size="12" font-weight="700" fill="#15191a">Encoded payload: 9999 (integer)</text></g></svg>`);
 }
