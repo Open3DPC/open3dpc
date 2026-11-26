@@ -125,6 +125,12 @@ backingStl(code, { plate: 1 });                         // Uint8Array: the light
 svg(code, { quietZone: true });                         // exact, in millimetres
 ```
 
+**From the command line**, with [`open3dpc-cli`](cli/):
+
+```bash
+open3dpc make 4242 --length 14 --shape 4x6   # open3dpc-4242-4x6.stl and -backing.stl
+```
+
 Print it in two filaments with strong contrast, and keep the quiet zone around the frame clear.
 
 ## Scan a code
@@ -132,6 +138,15 @@ Print it in two filaments with strong contrast, and keep the quiet zone around t
 **On a phone:** [open3dpc.org/scan](https://open3dpc.org/scan). Open it, allow the camera, point. It also
 reads a photo. The page is [generator/scan/](generator/scan/), and its reader is the JavaScript library
 below.
+
+**Photos and folders from the command line:**
+
+```bash
+open3dpc scan ~/Pictures/parts --shape 4x6
+```
+
+One line per code, or `--json`. The command is [`open3dpc-cli`](cli/); it is not on npm yet, so for now
+run it from this repository: `cd cli && npm install --no-save .. sharp && ./cli.js --help`.
 
 ## Build it into your app
 
@@ -223,6 +238,7 @@ agent.
 | [docs/concept.md](docs/concept.md) | What Open3DPC is, why, and the comparison with QR, Micro QR and Data Matrix |
 | [docs/reader-pipeline.md](docs/reader-pipeline.md) | How the readers work, stage by stage, and their known limits |
 | [generator/](generator/) | The generator and the scanner pages, and the JavaScript under both |
+| [cli/](cli/) | `open3dpc-cli`, the `open3dpc` command: read photos and folders, make files to print |
 | [swift/](swift/) | `Open3DPCKit`, the Swift package |
 | [kotlin/](kotlin/) | The Kotlin library |
 | [examples/](examples/) | Minimal camera scanners for iOS and Android |

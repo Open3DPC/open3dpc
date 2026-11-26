@@ -17,6 +17,15 @@ jobs:
         working-directory: generator
       - name: The npm package and its TypeScript types
         run: generator/test/types/check.sh
+  cli:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: The open3dpc command, against this checkout's library
+        run: cli/test/run.sh
   kotlin:
     runs-on: ubuntu-latest
     steps:

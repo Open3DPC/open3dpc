@@ -1,0 +1,33 @@
+{
+  "name": "open3dpc-cli",
+  "version": "0.1.0",
+  "description": "The open3dpc command: read Open3DPC codes from photos and folders, make STL, SVG and PNG files to print.",
+  "type": "module",
+  "bin": {
+    "open3dpc": "./cli.js"
+  },
+  "files": [
+    "cli.js",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18.17"
+  },
+  "dependencies": {
+    "open3dpc": "^0.1.0",
+    "sharp": "^0.34.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": ["open3dpc", "3d-printing", "barcode", "stl", "cli", "scanner"],
+  "homepage": "https://open3dpc.org",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Open3DPC/open3dpc.git",
+    "directory": "cli"
+  },
+  "bugs": "https://github.com/Open3DPC/open3dpc/issues",
+  "author": "Roman Simonov (https://romanaerl.github.io)",
+  "license": "Apache-2.0"
+}
