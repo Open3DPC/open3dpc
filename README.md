@@ -209,5 +209,5 @@ Code and test vectors: [Apache 2.0](LICENSE). Specification, documentation and f
 [CC BY 4.0](LICENSE-docs). Neither licence covers the name Open3DPC as a trade mark.
 QR Code is a registered trademark of DENSO WAVE INCORPORATED.
 
-Made by [Roman Simonov](https://github.com/romanaerl) from [Doinga](https://doinga.com) for [Enforso](https://enforso.com) and [Pilldone](https://pilldone.com),
+Made by [Roman Simonov](https://romanaerl.github.io) from [Doinga](https://doinga.com) for [Enforso](https://enforso.com) and [Pilldone](https://pilldone.com),
 and open sourced for all 3D printing enthusiasts of the world.
