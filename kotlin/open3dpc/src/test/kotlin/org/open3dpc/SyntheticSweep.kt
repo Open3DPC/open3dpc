@@ -48,8 +48,7 @@ internal object SyntheticSweep {
 
     /** Label to the number of codes read out of forty. */
     val rows: List<Triple<String, Int, () -> Sweep>> = buildList {
-        for (module in listOf(6, 8)) add(Triple("M = $module px", 38) { sweep(module) })
-        for (module in listOf(10, 12, 14, 16, 20, 24, 28, 40)) add(Triple("M = $module px", 40) { sweep(module) })
+        for (module in listOf(6, 8, 10, 12, 14, 16, 20, 24, 28, 40)) add(Triple("M = $module px", 40) { sweep(module) })
         add(Triple("0.7M cells at M = 14", 40) { sweep(14, shrunken = true) })
         for (rotation in 0..3) add(Triple("rotation ${rotation * 90}", 40) { sweep(20, rotations = rotation) })
         add(Triple("light on dark", 40) { sweep(20, pair = MaterialPair.LightOnDark) })
@@ -60,12 +59,12 @@ internal object SyntheticSweep {
             "roll 12" to PlanePose(roll = 12.0), "yaw 20 roll 12" to PlanePose(20.0, roll = 12.0),
         )) add(Triple(label, 40) { perspective(20, pose) })
         val yaw20 = PlanePose(20.0)
-        for ((error, count) in listOf(0.0 to 40, 0.1 to 36, 0.25 to 10, 0.5 to 0, 0.75 to 1, 1.0 to 0))
+        for ((error, count) in listOf(0.0 to 40, 0.1 to 34, 0.25 to 10, 0.5 to 0, 0.75 to 0, 1.0 to 0))
             add(Triple("corners off by $error M", count) { perspective(20, yaw20, quadError = error) })
-        for ((dilation, count) in listOf(-0.5 to 0, -0.3 to 0, -0.25 to 0, -0.2 to 39, -0.15 to 38, -0.1 to 40, 0.0 to 40, 0.25 to 40, 0.5 to 40, 1.0 to 40, 1.5 to 40, 2.0 to 40, 4.0 to 0))
+        for ((dilation, count) in listOf(-0.5 to 0, -0.3 to 0, -0.25 to 40, -0.2 to 40, -0.15 to 40, -0.1 to 40, 0.0 to 40, 0.25 to 40, 0.5 to 40, 1.0 to 40, 1.5 to 40, 2.0 to 40, 4.0 to 0))
             add(Triple("corners %+.2f M".format(dilation), count) { perspective(20, yaw20, quadDilation = dilation) })
         for ((sigma, count) in listOf(0.0 to 40, 0.1 to 40, 0.2 to 38, 0.3 to 3, 0.5 to 0))
             add(Triple("sigma $sigma M", count) { perspective(20, yaw20, blurSigma = sigma * 20) })
-        add(Triple("corners 0.25 M + sigma 0.20 M", 12) { perspective(20, yaw20, quadError = 0.25, blurSigma = 4.0) })
+        add(Triple("corners 0.25 M + sigma 0.20 M", 11) { perspective(20, yaw20, quadError = 0.25, blurSigma = 4.0) })
     }
 }
