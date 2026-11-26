@@ -16,7 +16,7 @@ Print a code into anything. Scan it with a phone.</p>
 
 <p align="center"><a href="https://open3dpc.org"><img src="docs/img/hero.svg" width="640" alt="A drawing of a two-color tile with an Open3DPC code holding the number 4242"></a></p>
 
-Open3DPC (Open 3D Print Code) is a small binary code that is printed **as part of the object**, in two
+Open3DPC (Open 3D Print Code) is a compact binary code that is printed **as part of the object**, in two
 filaments, on an ordinary FDM printer. No ink, no sticker, nothing to peel off. A phone camera reads it,
 in the browser or in an app, and gets back a number. What the number opens is up to your app: a spool's
 page, a drawer's contents, a game piece, a part's revision.
