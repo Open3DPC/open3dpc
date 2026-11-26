@@ -180,7 +180,7 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
     '#.....#.......#.....#', '#######.#.#.#.#######', '.........##..........', '####..#.#.#..#..###.#', '##...#.##...#..#...##', '#.#.#.##..#.#####..##',
     '.#..##...##.##.....##', '##....##.###.#..#.###', '........##...#.#..##.', '#######...#..##.#.##.', '#.....#..######..#.#.', '#.###.#..###..#..#..#',
     '#.###.#.#....#..#..#.', '#.###.#.#.##.#..###..', '#.....#.#####.#.##.##', '#######.##.##..#.#.#.'];
-  const shapes = [[5, 5], [4, 6], [3, 8], [2, 14]];
+  const shapes = [[9, 4], [5, 5], [4, 6], [3, 8], [2, 14]];
   const base = 23.2 * k + 8;                          // the bottom line all codes stand on: below the QR code, the tallest
   let x = 12;
   const parts = [];
@@ -202,5 +202,5 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
     x += W + 22;
   }
   const width = Math.ceil(x - 10);
-  out('shapes.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${base + 76}" width="${width}" height="${base + 76}" ${font} role="img" aria-label="9999 as a QR code, always a square, and as Open3DPC in four shapes from 5 × 5 to 2 × 14, at one scale"><rect width="${width}" height="${base + 76}" rx="10" fill="#f7f8f6"/><g transform="translate(0 12)">${parts.join('')}<text x="12" y="${base + 58}" font-size="12" font-weight="700" fill="#15191a">Encoded payload: 9999 (integer)</text></g></svg>`);
+  out('shapes.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${base + 76}" width="${width}" height="${base + 76}" ${font} role="img" aria-label="9999 as a QR code, always a square, and as Open3DPC in five shapes, tall, square and long, from 9 × 4 to 2 × 14, at one scale"><rect width="${width}" height="${base + 76}" rx="10" fill="#f7f8f6"/><g transform="translate(0 12)">${parts.join('')}<text x="12" y="${base + 58}" font-size="12" font-weight="700" fill="#15191a">Encoded payload: 9999 (integer)</text></g></svg>`);
 }
