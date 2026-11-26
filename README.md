@@ -210,4 +210,4 @@ Code and test vectors: [Apache 2.0](LICENSE). Specification, documentation and f
 QR Code is a registered trademark of DENSO WAVE INCORPORATED.
 
 Made by [Roman Simonov](https://romanaerl.github.io) from [Doinga](https://doinga.com) for [Enforso](https://enforso.com) and [Pilldone](https://pilldone.com),
-and open sourced for all 3D printing enthusiasts of the world.
+and open-sourced for 3D printing enthusiasts everywhere.
