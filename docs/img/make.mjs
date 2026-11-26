@@ -170,3 +170,37 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
   const b = draw(darkGrid(encode('10011100001111', 4, 6)), 1, 140, 'Open3DPC 4 × 6', '14.4 × 11.2 mm');
   out('nozzle-loops.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 162" width="756" height="486" ${font} role="img" aria-label="The path of a 0.4 mm nozzle for 9999: ${a.total} loops in the QR code, ${b.total} in Open3DPC"><rect width="252" height="162" rx="6" fill="#ffffff"/>${a.svg}${b.svg}</svg>`);
 }
+
+// ---- one number, many shapes: 9999 as the smallest standard QR code and as Open3DPC from square to long,
+// one scale, quiet zone included, 0.8 mm thinnest feature (1.6 mm module). Three rows or more: a longer
+// checksum than the two-row shapes, which also hold 9999.
+{
+  const k = 6;                                        // drawing units per millimetre
+  const qrGrid = ['#######.##..#.#######', '#.....#..#..#.#.....#', '#.###.#.#.#.#.#.###.#', '#.###.#.#..#..#.###.#', '#.###.#.###...#.###.#',
+    '#.....#.......#.....#', '#######.#.#.#.#######', '.........##..........', '####..#.#.#..#..###.#', '##...#.##...#..#...##', '#.#.#.##..#.#####..##',
+    '.#..##...##.##.....##', '##....##.###.#..#.###', '........##...#.#..##.', '#######...#..##.#.##.', '#.....#..######..#.#.', '#.###.#..###..#..#..#',
+    '#.###.#.#....#..#..#.', '#.###.#.#.##.#..###..', '#.....#.#####.#.##.##', '#######.##.##..#.#.#.'];
+  const shapes = [[5, 5], [4, 6], [3, 8], [3, 12], [3, 16]];
+  const base = 23.2 * k + 8;                          // the bottom line all codes stand on: below the QR code, the tallest
+  let x = 12;
+  const parts = [];
+  const caption = (name, size, cx, muted) => `<text x="${cx}" y="${base + 22}" font-size="12" font-weight="700" fill="${muted ? '#8b948f' : '#15191a'}">${name}</text><text x="${cx}" y="${base + 38}" font-size="11" fill="#5d6562">${size}</text>`;
+  {
+    const side = 23.2 * k, m = 0.8 * k;               // QR: 21 modules and a 4-module quiet zone, 0.8 mm each
+    let d = '';
+    qrGrid.forEach((row, r) => [...row].forEach((c, col) => { if (c === '#') d += `M${x + (col + 4) * m} ${base - side + (r + 4) * m}h${m}v${m}h${-m}z`; }));
+    parts.push(`<rect x="${x}" y="${base - side}" width="${side}" height="${side}" fill="#fff" stroke="#d3d8d4"/><path fill="#8b948f" d="${d}"/>`, caption('QR code', 'always a square', x, true));
+    x += side + 22;
+  }
+  for (const [h, w] of shapes) {
+    const grid = darkGrid(encode('10011100001111', h, w));
+    const cell = 0.8 * k;                             // a half-module
+    const W = (grid[0].length + 2) * cell, H = (grid.length + 2) * cell;
+    let d = '';
+    grid.forEach((row, r) => row.forEach((dark, c) => { if (dark && !row[c - 1]) d += `M${x + (c + 1) * cell} ${base - H + (r + 1) * cell}h${[...row.slice(c), 0].indexOf(0) * cell}v${cell}h${-[...row.slice(c), 0].indexOf(0) * cell}z`; }));
+    parts.push(`<rect x="${x}" y="${base - H}" width="${W}" height="${H}" fill="#fff" stroke="#d3d8d4"/><path fill="#131917" d="${d}"/>`, caption(`${h} × ${w}`, `${(W / k).toFixed(1)} × ${(H / k).toFixed(1)} mm`, x));
+    x += W + 22;
+  }
+  const width = Math.ceil(x - 10);
+  out('shapes.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${base + 76}" width="${width}" height="${base + 76}" ${font} role="img" aria-label="9999 as a QR code, always a square, and as Open3DPC in five shapes from 5 × 5 to 3 × 16, at one scale"><rect width="${width}" height="${base + 76}" rx="10" fill="#f7f8f6"/><g transform="translate(0 12)">${parts.join('')}<text x="12" y="${base + 58}" font-size="12" font-weight="700" fill="#15191a">Encoded payload: 9999 (integer)</text></g></svg>`);
+}
