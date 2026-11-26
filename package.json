@@ -1,6 +1,6 @@
 {
   "name": "open3dpc",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "A tiny two-color code made for 3D printing: make codes (SVG, PNG, STL) and read them from camera frames or photos. No dependencies.",
   "type": "module",
   "exports": {

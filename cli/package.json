@@ -1,6 +1,6 @@
 {
   "name": "open3dpc-cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "The open3dpc command: read Open3DPC codes from photos and folders, make STL, SVG and PNG files to print.",
   "type": "module",
   "bin": {
@@ -16,7 +16,7 @@
     "node": ">=20.9"
   },
   "dependencies": {
-    "open3dpc": "^0.1.2",
+    "open3dpc": "^0.1.3",
     "sharp": "^0.35.5"
   },
   "scripts": {
