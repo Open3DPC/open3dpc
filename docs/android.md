@@ -63,7 +63,7 @@ What has to be right:
 
 `payloadLengths` and `geometries` decide what this session reads: the lengths in bits and the shapes,
 `Open3DPCGeometry(rows, columns)`. Both default to any; set them to the codes you print
-([why](../README.md#you-decide-what-a-session-reads)).
+([why](../README.md#the-contract-the-length-and-the-shape-you-print)).
 
 `roi` and `corners` are in **buffer** pixels, origin top left, before any display rotation. The example
 maps the viewfinder through `PreviewView.getSensorToViewTransform()` and

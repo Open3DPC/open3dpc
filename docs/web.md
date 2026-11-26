@@ -13,7 +13,7 @@ Install it with `npm install open3dpc` and import `open3dpc/reader`, or copy the
 ```js
 import { Frame, Open3DPCReader } from './open3dpc-reader.js';
 
-const reader = new Open3DPCReader({ payloadLengths: [14] });
+const reader = new Open3DPCReader({ payloadLengths: [14], geometries: [[4, 6]] });
 const readings = reader.read(Frame.fromImageData(context.getImageData(0, 0, width, height)));
 readings[0]?.value;                                     // 9999n, a BigInt
 ```
@@ -21,7 +21,7 @@ readings[0]?.value;                                     // 9999n, a BigInt
 Set `payloadLengths` and `geometries` for each session: the payload lengths it understands and the shapes it
 accepts, as `[rows, columns]`, for example `{ payloadLengths: [14], geometries: [[4, 6]] }`. Anything else is
 ignored. Fewer accepted codes means fewer false reads
-([why](../README.md#you-decide-what-a-session-reads)).
+([why](../README.md#the-contract-the-length-and-the-shape-you-print)).
 
 ## Read a camera
 

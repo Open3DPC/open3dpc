@@ -59,7 +59,7 @@ What has to be right:
 
 `Options` decides what this session reads: `payloadLengths` (lengths in bits) and `geometries`
 (`.init(height:width:)`, rows by columns). Both default to any; set them to the codes you print
-([why](../README.md#you-decide-what-a-session-reads)).
+([why](../README.md#the-contract-the-length-and-the-shape-you-print)).
 
 `regionOfInterest` and `corners` are normalised with the origin at the **lower left**, as in Vision.
 From a preview layer:

@@ -164,7 +164,7 @@ reader also asks Apple's Vision.
 
 ```text
 Add an Open3DPC scanner to this app. Read https://github.com/Open3DPC/open3dpc/blob/main/docs/web.md,
-use the reader it describes, accept only 14-bit codes, and call onCode(number) when one is confirmed.
+use the reader it describes, accept only 14-bit codes printed as 4 × 6, and call onCode(number) when one is confirmed.
 ```
 
 **Or write it.** JavaScript:
@@ -172,7 +172,7 @@ use the reader it describes, accept only 14-bit codes, and call onCode(number) w
 ```js
 import { Frame, Open3DPCReader, Open3DPCStabilizer } from 'open3dpc/reader';
 
-const reader = new Open3DPCReader({ payloadLengths: [14] });
+const reader = new Open3DPCReader({ payloadLengths: [14], geometries: [[4, 6]] });
 const stabilizer = new Open3DPCStabilizer();
 const code = stabilizer.observe(reader.read(Frame.fromImageData(image)), performance.now());
 if (code) console.log(code.value);                     // 4242n, once seen in two frames
@@ -181,7 +181,7 @@ if (code) console.log(code.value);                     // 4242n, once seen in tw
 Swift, with `https://github.com/Open3DPC/open3dpc` added as a package:
 
 ```swift
-let reader = Open3DPCReader(options: .init(payloadLengths: [14]))
+let reader = Open3DPCReader(options: .init(payloadLengths: [14], geometries: [.init(height: 4, width: 6)]))
 var stabilizer = Open3DPCStabilizer()
 if let code = stabilizer.observe(reader.read(pixelBuffer, regionOfInterest: viewfinder)) {
     print(code.value!)                                  // 4242
@@ -191,24 +191,34 @@ if let code = stabilizer.observe(reader.read(pixelBuffer, regionOfInterest: view
 Kotlin:
 
 ```kotlin
-val reader = Open3DPCReader(payloadLengths = setOf(14))
+val reader = Open3DPCReader(payloadLengths = setOf(14), geometries = setOf(Open3DPCGeometry(4, 6)))
 val stabilizer = Open3DPCStabilizer()
 stabilizer.observe(reader.read(frame, viewfinder), nowMs)?.let { println(it.value) }   // 4242
 ```
 
-### You decide what a session reads
+### The contract: the length and the shape you print
 
 Open3DPC defines the container: the frame, the grid, the checksum, and a payload of a known number of
 bits. It does not define what is inside. There is no type, version or owner field; what the bits mean
 is your application's business ([profiles](spec/profiles.md)).
 
-So the container is also your filter. When you start a scanning session you tell the reader which
-payload lengths and which shapes this session accepts, and everything else is ignored before your code
-ever sees it. A shop that prints 14-bit codes as 4 × 6 asks for exactly that; an app that also reads
-24-bit labels on 3 × 10 adds them. Each session can ask for something else.
+So a project starts with two choices: the **capacity**, how many bits every code carries, and the
+**shape**, its rows and columns. That pair is the contract between what you print and what you read.
+Give the same pair to the reader, and anything else is ignored before your code ever sees it:
+
+- a code of another length or shape, a stray pattern that happens to pass the checksum, or a code meant
+  for another app;
+- a code of yours that the reader measured wrong: under glare a row of dark cells can look one row
+  longer, and a 2 × 9 code would come out as a 3 × 9 one with a different number. With the shape fixed,
+  such a read is dropped, never returned.
+
+A shop that prints 14-bit codes as 4 × 6 asks for exactly that; an app that also reads 24-bit labels on
+3 × 10 lists both. A session may accept several lengths and several shapes at once, and each session can
+ask for something else.
 
 ```js
 new Open3DPCReader({ payloadLengths: [14], geometries: [[4, 6]] })                        // JavaScript
+new Open3DPCReader({ payloadLengths: [14, 24], geometries: [[4, 6], [3, 10]] })          // two of them
 ```
 
 ```swift
@@ -219,8 +229,9 @@ Open3DPCReader(options: .init(payloadLengths: [14], geometries: [.init(height: 4
 Open3DPCReader(payloadLengths = setOf(14), geometries = setOf(Open3DPCGeometry(4, 6)))     // Kotlin
 ```
 
-Both default to any. Set them: the fewer codes a session accepts, the less likely a stray pattern passes
-the checksum as one of yours, and a code meant for another app is never mistaken for yours.
+Both are optional and default to any, which suits a tool that reads codes it did not make, like the
+[scan page](https://open3dpc.org/scan). In your own app set both: the fewer codes a session accepts, the
+fewer wrong reads reach it. The command line takes the same pair as `--bits 14 --shape 4x6`.
 
 ## Ideas
 
