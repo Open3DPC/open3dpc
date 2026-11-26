@@ -4,7 +4,7 @@
   "description": "The open3dpc command: read Open3DPC codes from photos and folders, make STL, SVG and PNG files to print.",
   "type": "module",
   "bin": {
-    "open3dpc": "./cli.js"
+    "open3dpc": "cli.js"
   },
   "files": [
     "cli.js",
@@ -22,7 +22,14 @@
   "scripts": {
     "test": "node --test test/*.test.js"
   },
-  "keywords": ["open3dpc", "3d-printing", "barcode", "stl", "cli", "scanner"],
+  "keywords": [
+    "open3dpc",
+    "3d-printing",
+    "barcode",
+    "stl",
+    "cli",
+    "scanner"
+  ],
   "homepage": "https://open3dpc.org",
   "repository": {
     "type": "git",
