@@ -70,7 +70,7 @@ printer, and it is what the phone needs to read it.
 A QR code is always a square. Open3DPC takes any rows and columns that hold the number, so it fits where
 a square does not: a rim, a handle, the edge of a lid. The same 9999, from square to long, at one scale:
 
-<p align="center"><img src="docs/img/shapes.svg" width="760" alt="9999 as a QR code, always a square, and as Open3DPC in five shapes from 5 × 5 to 2 × 10, at one scale"></p>
+<p align="center"><img src="docs/img/shapes.svg" width="760" alt="9999 as a QR code, always a square, and as Open3DPC in five shapes from 5 × 5 to 2 × 14, at one scale"></p>
 
 Every shape that holds a number is in the gallery of the [generator](https://open3dpc.org/make). The flattest,
 two rows, carry a checksum of only two bits: accept only the shapes you print, and prefer three rows when
