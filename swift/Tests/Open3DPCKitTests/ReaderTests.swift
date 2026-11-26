@@ -129,6 +129,42 @@ final class ReaderTests: XCTestCase {
         }
     }
 
+    /// Told the shape, the reader takes the module from the frame itself, so glare cannot make a row of
+    /// dark cells one row longer. The same as generator/test/reader.test.js.
+    func testAcceptedShapesGiveTheModuleSoGlareCannotChangeTheShape() throws {
+        var plain = 0, hinted = 0
+        for (text, height, width) in [(String(repeating: "1", count: 14), 2, 11), (String(repeating: "1", count: 14), 3, 7),
+                                      (String(repeating: "1", count: 14), 2, 9), ("10011100001111", 4, 5)] {
+            let geometry = Open3DPC.Geometry(height: height, width: width)
+            let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits(text), geometry: geometry))
+            for module in [6, 10] {
+                for (radius, lift) in [(1, 40), (1, 110), (3, 40), (3, 110)] {
+                    let picture = Grey(matrix, module: module, margin: 1).glared(radius: radius, lift: lift).image
+                    let found = Open3DPCReader(options: .init(geometries: [geometry])).read(picture)
+                    XCTAssertTrue(found.allSatisfy { $0.payload == bits(text) && $0.geometry == geometry }, "\(geometry) at \(module), glare \(radius)/\(lift): \(found)")
+                    if !found.isEmpty { hinted += 1 }
+                    if Open3DPCReader().read(picture).contains(where: { $0.payload == bits(text) && $0.geometry == geometry }) { plain += 1 }
+                }
+            }
+        }
+        print("glare: \(hinted) of 32 read with the shape, \(plain) without")
+        XCTAssertGreaterThanOrEqual(hinted, plain)
+    }
+
+    /// A shape one row or column off is the likeliest wrong guess: told only that one, the reader reads nothing.
+    func testAShapeTheCodeDoesNotHaveIsNeverForcedOnIt() throws {
+        for (text, height, width) in [("10011100001111", 4, 5), (String(repeating: "1", count: 14), 2, 9), (String(repeating: "1", count: 14), 3, 7)] {
+            let matrix = try XCTUnwrap(Open3DPC.encode(payload: bits(text), geometry: .init(height: height, width: width)))
+            for (dh, dw) in [(1, 0), (-1, 0), (0, 1), (0, -1)] {
+                for (radius, lift) in [(0, 0), (2, 80)] {
+                    let picture = Grey(matrix, module: 8, margin: 1).glared(radius: radius, lift: lift).turned(degrees: 20).image
+                    let told = Open3DPC.Geometry(height: height + dh, width: width + dw)
+                    XCTAssertEqual(Open3DPCReader(options: .init(geometries: [told])).read(picture).count, 0, "\(height)×\(width) told \(told), glare \(radius)")
+                }
+            }
+        }
+    }
+
     /// Small codes: the proposal has to lie on the frame, or the corner step is looked for in the margin.
     func testSmallCodesReadAtEveryAngle() throws {
         for (height, width, length) in [(4, 6, 14), (3, 5, 9), (10, 10, 60)] {

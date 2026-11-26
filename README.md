@@ -209,8 +209,12 @@ Give the same pair to the reader, and anything else is ignored before your code 
 - a code of another length or shape, a stray pattern that happens to pass the checksum, or a code meant
   for another app;
 - a code of yours that the reader measured wrong: under glare a row of dark cells can look one row
-  longer, and a 2 × 9 code would come out as a 3 × 9 one with a different number. With the shape fixed,
-  such a read is dropped, never returned.
+  longer, and a 2 × 9 code would come out as a 3 × 9 one with a different number.
+
+The shapes are not only a filter on the result. The reader tries only them, each at the module its own
+frame gives, instead of guessing the grid from a module it measured, so glare cannot change the shape: a
+2 × 9 code told it is 2 × 9 reads as 2 × 9, or as nothing. Codes that glare or a bright screen kept from
+being read at all read more often, and the reader samples fewer grids per candidate.
 
 A shop that prints 14-bit codes as 4 × 6 asks for exactly that; an app that also reads 24-bit labels on
 3 × 10 lists both. A session may accept several lengths and several shapes at once, and each session can

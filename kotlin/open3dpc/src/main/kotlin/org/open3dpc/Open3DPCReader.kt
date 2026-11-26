@@ -37,10 +37,14 @@ class Open3DPCReader(
     private val geometries: Set<Open3DPCGeometry>? = null,
 ) {
     private val decoder = Open3DPCFrameDecoder()
+    /** The accepted shapes reach the sampler too: each is tried at the module its own frame gives. */
+    private val gates = geometries?.let { accepted ->
+        Open3DPCGates(shapes = accepted.flatMap { listOf(it.rows to it.columns, it.columns to it.rows) }.distinct())
+    } ?: Open3DPCGates.Strict
 
     /** Reads a frame. Pass the viewfinder as [roi]: it bounds the work and keeps neighbouring codes out. */
     fun read(frame: Open3DPCFrame, roi: FrameRect = frame.bounds): List<Open3DPCReading> =
-        decoder.analyze(frame, roi).mapNotNull { found ->
+        decoder.analyze(frame, roi, gates).mapNotNull { found ->
             val bits = found.payload ?: return@mapNotNull null
             val geometry = Open3DPCGeometry(found.height ?: return@mapNotNull null, found.width ?: return@mapNotNull null)
             if (payloadLengths?.contains(bits.length) == false || geometries?.contains(geometry) == false) return@mapNotNull null

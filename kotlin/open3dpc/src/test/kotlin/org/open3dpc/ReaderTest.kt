@@ -42,6 +42,20 @@ class ReaderTest {
             }
             return Grey(side, side, out)
         }
+        /** A bright screen or glare: a box blur [radius] pixels wide, lifted by [lift]. Dark parts come out thinner. */
+        fun glared(radius: Int, lift: Int): Grey {
+            val out = ByteArray(pixels.size)
+            for (y in 0 until height) for (x in 0 until width) {
+                var total = 0
+                var count = 0
+                for (sy in maxOf(0, y - radius)..minOf(height - 1, y + radius)) for (sx in maxOf(0, x - radius)..minOf(width - 1, x + radius)) {
+                    total += pixels[sy * width + sx].toInt() and 255
+                    count++
+                }
+                out[y * width + x] = minOf(255, (total + count / 2) / count + lift).toByte()
+            }
+            return Grey(width, height, out)
+        }
         fun quarter() = Grey(height, width, ByteArray(pixels.size).also { for (y in 0 until height) for (x in 0 until width) it[x * height + height - 1 - y] = pixels[y * width + x] })
     }
     private class Fixture(val file: String, val payload: String, val rows: Int, val columns: Int, val image: Grey)
@@ -54,6 +68,45 @@ class ReaderTest {
         Fixture(name, f.getValue("payload").jsonPrimitive.content, f.getValue("h").jsonPrimitive.int, f.getValue("w").jsonPrimitive.int, Grey(w, h, data.copyOfRange(ends[2] + 1, data.size)))
     }
     private fun fixture(name: String) = fixtures.first { it.file == "$name.pgm" }
+
+    /** The exact construction of spec/v2.md §3, [module] pixels per cell, one module of margin. */
+    private fun drawn(payload: String, h: Int, w: Int, module: Int): Grey {
+        val code = ReferenceRaster.render(Open3DPC.encode(payload, h, w), module)
+        val width = code.width + 2 * module
+        val height = code.height + 2 * module
+        val out = ByteArray(width * height) { -1 }
+        for (y in 0 until code.height) for (x in 0 until code.width) out[(y + module) * width + x + module] = code.rgba[(y * code.width + x) * 4]
+        return Grey(width, height, out)
+    }
+
+    /** Told the shape, the reader takes the module from the frame itself, so glare cannot make a row of dark cells one row longer. */
+    @Test fun acceptedShapesGiveTheModuleSoGlareCannotChangeTheShape() {
+        var plain = 0
+        var hinted = 0
+        for ((payload, h, w) in listOf(Triple("1".repeat(14), 2, 11), Triple("1".repeat(14), 3, 7), Triple("1".repeat(14), 2, 9), Triple("10011100001111", 4, 5))) {
+            for (module in listOf(6, 10)) for ((radius, lift) in listOf(1 to 40, 1 to 110, 3 to 40, 3 to 110)) {
+                val frame = drawn(payload, h, w, module).glared(radius, lift).frame()
+                val found = Open3DPCReader(geometries = setOf(Open3DPCGeometry(h, w))).read(frame)
+                assertTrue("$h×$w at $module, glare $radius/$lift: $found", found.all { it.bits == payload && it.rows == h && it.columns == w })
+                if (found.isNotEmpty()) hinted++
+                if (Open3DPCReader().read(frame).any { it.bits == payload && it.rows == h && it.columns == w }) plain++
+            }
+        }
+        println("glare: $hinted of 32 read with the shape, $plain without")
+        assertTrue("$hinted with the shape, $plain without", hinted >= plain)
+    }
+
+    /** A shape one row or column off is the likeliest wrong guess: told only that one, the reader reads nothing. */
+    @Test fun aShapeTheCodeDoesNotHaveIsNeverForcedOnIt() {
+        for ((payload, h, w) in listOf(Triple("10011100001111", 4, 5), Triple("1".repeat(14), 2, 9), Triple("1".repeat(14), 3, 7))) {
+            for ((dh, dw) in listOf(1 to 0, -1 to 0, 0 to 1, 0 to -1)) for ((radius, lift) in listOf(0 to 0, 2 to 80)) {
+                var picture = drawn(payload, h, w, 8)
+                if (radius > 0) picture = picture.glared(radius, lift)
+                val found = Open3DPCReader(geometries = setOf(Open3DPCGeometry(h + dh, w + dw))).read(picture.turned(20.0).frame())
+                assertEquals("$h×$w told ${h + dh}×${w + dw}, glare $radius", 0, found.size)
+            }
+        }
+    }
 
     /** Every picture the generator drew, at seven angles and four turns; a wrong payload is never allowed. */
     @Test fun generatedCodesRead() {

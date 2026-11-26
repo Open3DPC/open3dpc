@@ -15,6 +15,9 @@ struct Open3DPCValidationGates: Sendable, Equatable {
     var requireMarkerQuietBand: Bool = true
     var requireModuleQuietBands: Bool = true
     var requireUniqueCornerStep: Bool = true
+    /// The shapes a session accepts, each also turned a quarter; nil for any. Each is tried at the
+    /// module its own frame gives (see `hintedGeometries` in the JavaScript reader).
+    var shapes: [Open3DPC.Geometry]? = nil
 
     static let strict = Self()
 }
@@ -736,6 +739,12 @@ final class Open3DPCFrameDecoder {
     static let scaleSeparation = 0.04
     /// Where the rays cross the orientation feature, as fractions of M from the frame's inner edge.
     static let featureRayFractions = [0.3, 0.5, 0.7]
+    /// How far the module a shape's frame gives across may differ from the one it gives down: perspective.
+    static let hintedAspectLimit = 0.35
+    /// How far it may differ from a module measured between two edges of one kind, which glare does not move.
+    static let hintedEdgeLimit = 0.12
+    /// Glare only thins material, so a module measured from a run of it is short, never long: the range allowed.
+    static let hintedRunRange = 0.9...1.6
 
     /// How far the leading hypothesis must beat the runner-up on its least confident cell to settle a
     /// structural tie. See docs/reader-pipeline.md, stage 10.
@@ -1644,7 +1653,10 @@ final class Open3DPCFrameDecoder {
             let measuredMarkerCandidates = corners.filter {
                 cornerBlockScore($0, horizontalModule: measuredMx, verticalModule: measuredMy) >= 0.88
             }
-            guard measuredMarkerCandidates.count == 1, let measuredMarker = measuredMarkerCandidates.first else {
+            let shapes = validationGates.shapes
+            // With the shapes known, each one is tried at the module its own frame gives, so a module
+            // measured wrong under glare cannot reject the code here.
+            guard measuredMarkerCandidates.count == 1 || shapes != nil else {
                 deepestDiagnostics = diagnostics
                 recordRejection(
                     measuredMarkerCandidates.isEmpty
@@ -1655,39 +1667,54 @@ final class Open3DPCFrameDecoder {
                 )
                 continue
             }
-            let measuredMarkerScore = cornerBlockScore(
-                measuredMarker, horizontalModule: measuredMx, verticalModule: measuredMy
-            )
+            let measuredMarker = measuredMarkerCandidates.count == 1 ? measuredMarkerCandidates.first : nil
+            let measuredMarkerScore = measuredMarker.map {
+                cornerBlockScore($0, horizontalModule: measuredMx, verticalModule: measuredMy)
+            }
             diagnostics = StructuralDiagnostics(
                 interiorBackgroundScore: interiorBackground,
                 horizontalFrameThickness: horizontalThickness,
                 verticalFrameThickness: verticalThickness,
                 moduleAspectRatio: measuredModuleAspectRatio,
                 markerCornerScore: measuredMarkerScore,
-                attachedMarker: attachedMarker(
-                    for: measuredMarker,
-                    horizontalModule: measuredMx,
-                    verticalModule: measuredMy,
-                    score: measuredMarkerScore,
-                    imageWidth: width,
-                    imageHeight: height,
-                    samplingSpace: samplingSpace
-                )
+                attachedMarker: measuredMarker.map {
+                    attachedMarker(
+                        for: $0,
+                        horizontalModule: measuredMx,
+                        verticalModule: measuredMy,
+                        score: measuredMarkerScore ?? 0,
+                        imageWidth: width,
+                        imageHeight: height,
+                        samplingSpace: samplingSpace
+                    )
+                }
             )
             deepestDiagnostics = diagnostics
-            let markerQuietPoints: [(Double, Double)] = [
-                point(measuredMarker, xInset: 1.75 * measuredMx, yInset: measuredMy),
-                point(measuredMarker, xInset: measuredMx, yInset: 1.75 * measuredMy),
-                point(measuredMarker, xInset: 1.75 * measuredMx, yInset: 1.75 * measuredMy),
-            ]
-            let measuredMarkerQuietBandIsClear = markerQuietPoints.allSatisfy {
-                !isMaterial(image.brightness(x: $0.0, y: $0.1, span: sampleSpan), at: $0.0, $0.1)
+
+            // The accepted shapes this frame can be, each at the module its own frame gives. Glare that
+            // thins the frame shrinks the outside and widens the opening by the same amount, so their
+            // mean, (W + 1.5) modules, holds still. A shape is kept while the module it gives across and
+            // down agree and stay near what was measured, so the hint never forces a picture into a shape
+            // it does not have: a shape one row too many gives a module shorter than any glare explains.
+            var hintedErrors: [Open3DPC.Geometry: Double] = [:]
+            for geometry in shapes ?? [] {
+                let across = (width + openWidth) / Double(2 * geometry.width + 3)
+                let down = (height + openHeight) / Double(2 * geometry.height + 3)
+                let aspect = abs(across / down - 1)
+                let ratios = [across / measuredMx, down / measuredMy]
+                let agrees = edgeMeasured
+                    ? ratios.allSatisfy { abs($0 - 1) <= Self.hintedEdgeLimit }
+                    : ratios.allSatisfy { Self.hintedRunRange.contains($0) }
+                guard min(width / Double(geometry.width + 2), height / Double(geometry.height + 2)) >= 2.5,
+                      aspect <= Self.hintedAspectLimit, agrees else { continue }
+                hintedErrors[geometry] = edgeMeasured ? ratios.map { abs($0 - 1) }.max()! : aspect
             }
-            if !measuredMarkerQuietBandIsClear { deepestDiagnostics = diagnostics }
 
             let estimatedRows = Int((openHeight / measuredMy).rounded()) - 1
             let estimatedColumns = Int((openWidth / measuredMx).rounded()) - 1
-            let geometries = (-1...1).flatMap { rowOffset in
+            let geometries = shapes != nil
+                ? hintedErrors.sorted { $0.value < $1.value }.map(\.key)
+                : (-1...1).flatMap { rowOffset in
                 (-1...1).compactMap { columnOffset -> Open3DPC.Geometry? in
                     let geometry = Open3DPC.Geometry(
                         height: estimatedRows + rowOffset,
@@ -1709,7 +1736,11 @@ final class Open3DPCFrameDecoder {
             }
             guard !geometries.isEmpty else {
                 deepestDiagnostics = diagnostics
-                recordRejection("frame scale does not fit a protocol-valid grid", .noProtocolValidGrid, priority: 5)
+                recordRejection(
+                    shapes != nil ? "frame fits none of the accepted shapes" : "frame scale does not fit a protocol-valid grid",
+                    .noProtocolValidGrid,
+                    priority: 5
+                )
                 continue
             }
 
@@ -1732,7 +1763,7 @@ final class Open3DPCFrameDecoder {
                 }
                 guard markerCandidates.count == 1,
                       let marker = markerCandidates.first,
-                      marker.id == measuredMarker.id else {
+                      shapes != nil || marker.id == measuredMarker?.id else {
                     recordRejection("corner marker does not agree with measured frame scale", .markerDisagreesWithScale, priority: 5)
                     continue
                 }
@@ -1844,8 +1875,8 @@ final class Open3DPCFrameDecoder {
                     markerScore: markerScore,
                     quietBandScore: quietScore,
                     lowestCellConfidence: lowestConfidence,
-                    scaleError: scaleError(geometry),
-                    edgeMeasured: edgeMeasured,
+                    scaleError: hintedErrors[geometry] ?? scaleError(geometry),
+                    edgeMeasured: edgeMeasured || shapes != nil,
                     diagnostics: StructuralDiagnostics(
                         interiorBackgroundScore: interiorBackground,
                         horizontalFrameThickness: horizontalThickness,
@@ -1853,10 +1884,10 @@ final class Open3DPCFrameDecoder {
                         moduleAspectRatio: moduleAspectRatio,
                         markerCornerScore: markerScore,
                         attachedMarker: attachedMarker(
-                            for: measuredMarker,
-                            horizontalModule: measuredMx,
-                            verticalModule: measuredMy,
-                            score: measuredMarkerScore,
+                            for: measuredMarker ?? marker,
+                            horizontalModule: measuredMarker == nil ? horizontalModule : measuredMx,
+                            verticalModule: measuredMarker == nil ? verticalModule : measuredMy,
+                            score: measuredMarkerScore ?? markerScore,
                             imageWidth: width,
                             imageHeight: height,
                             samplingSpace: samplingSpace

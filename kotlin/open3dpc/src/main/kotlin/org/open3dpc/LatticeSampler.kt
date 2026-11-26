@@ -62,6 +62,13 @@ internal object LatticeSampler {
     private const val SCALE_SEPARATION = 0.04
     /** Where the rays cross the orientation feature, as fractions of M from the frame's inner edge. */
     private val FEATURE_RAY_FRACTIONS = doubleArrayOf(0.3, 0.5, 0.7)
+    /** How far the module a shape's frame gives across may differ from the one it gives down: perspective. */
+    private const val HINTED_ASPECT_LIMIT = 0.35
+    /** How far it may differ from a module measured between two edges of one kind, which glare does not move. */
+    private const val HINTED_EDGE_LIMIT = 0.12
+    /** Glare only thins material, so a module measured from a run of it is short, never long: the range allowed. */
+    private const val HINTED_RUN_LOWER = 0.9
+    private const val HINTED_RUN_UPPER = 1.6
 
     /** `analyzeFixture`. */
     fun analyze(raster: Raster, gates: Open3DPCGates = Open3DPCGates.Strict): RasterOutcome {
@@ -553,14 +560,17 @@ internal object LatticeSampler {
                 return materialFraction(markerX + horizontalModule / 2, markerY + verticalModule / 2, horizontalModule * 0.34, verticalModule * 0.34, sampleSpan)
             }
             val measuredMarkerCandidates = CORNERS.filter { cornerBlockScore(it, measuredMx, measuredMy) >= 0.88 }
-            if (measuredMarkerCandidates.size != 1) {
+            val shapes = gates.shapes
+            // With the shapes known, each one is tried at the module its own frame gives, so a module measured
+            // wrong under glare cannot reject the code here.
+            if (measuredMarkerCandidates.size != 1 && shapes == null) {
                 deepestDiagnostics = diagnostics
                 if (measuredMarkerCandidates.isEmpty()) recordRejection("no unique frame-attached M×M marker from inner frame guides", Open3DPCRejection.NoUniqueAttachedMarker, 3)
                 else recordRejection("ambiguous frame-attached corner markers", Open3DPCRejection.AmbiguousCornerMarkers, 3)
                 continue
             }
-            val measuredMarker = measuredMarkerCandidates[0]
-            val measuredMarkerScore = cornerBlockScore(measuredMarker, measuredMx, measuredMy)
+            val measuredMarker = measuredMarkerCandidates.singleOrNull()
+            val measuredMarkerScore = measuredMarker?.let { cornerBlockScore(it, measuredMx, measuredMy) }
             diagnostics = StructuralDiagnostics(interiorBackground, horizontalThickness, verticalThickness, measuredModuleAspectRatio, measuredMarkerScore)
             deepestDiagnostics = diagnostics
 
@@ -568,8 +578,23 @@ internal object LatticeSampler {
             val estimatedColumns = swiftRound(openWidth / measuredMx).toInt() - 1
             fun scaleError(rows: Int, columns: Int) =
                 max(abs(openWidth / (columns + 1) / measuredMx - 1), abs(openHeight / (rows + 1) / measuredMy - 1))
-            val geometries = ArrayList<Pair<Int, Int>>()
-            for (rowOffset in -1..1) for (columnOffset in -1..1) {
+            // `hintedGeometries` in the JavaScript reader: glare that thins the frame shrinks the outside and
+            // widens the opening by the same amount, so their mean, (W + 1.5) modules, holds still. A shape is
+            // kept while the module it gives across and down agree and stay near what was measured, so the hint
+            // never forces a picture into a shape it does not have. The checksum still decides.
+            val hintedErrors = HashMap<Pair<Int, Int>, Double>()
+            if (shapes != null) for ((rows, columns) in shapes) {
+                val across = (width + openWidth) / (2 * columns + 3)
+                val down = (height + openHeight) / (2 * rows + 3)
+                val aspect = abs(across / down - 1)
+                val ratios = doubleArrayOf(across / measuredMx, down / measuredMy)
+                val agrees = if (edgeMeasured) ratios.all { abs(it - 1) <= HINTED_EDGE_LIMIT }
+                else ratios.all { it >= HINTED_RUN_LOWER && it <= HINTED_RUN_UPPER }
+                if (min(width / (columns + 2), height / (rows + 2)) < 2.5 || aspect > HINTED_ASPECT_LIMIT || !agrees) continue
+                hintedErrors[rows to columns] = if (edgeMeasured) ratios.maxOf { abs(it - 1) } else aspect
+            }
+            val geometries = ArrayList<Pair<Int, Int>>(hintedErrors.entries.sortedBy { it.value }.map { it.key })
+            if (shapes == null) for (rowOffset in -1..1) for (columnOffset in -1..1) {
                 val rows = estimatedRows + rowOffset
                 val columns = estimatedColumns + columnOffset
                 if (!validInSomeOrientation(rows, columns)) continue
@@ -580,7 +605,7 @@ internal object LatticeSampler {
             }
             if (geometries.isEmpty()) {
                 deepestDiagnostics = diagnostics
-                recordRejection("frame scale does not fit a protocol-valid grid", Open3DPCRejection.NoProtocolValidGrid, 5)
+                recordRejection(if (shapes != null) "frame fits none of the accepted shapes" else "frame scale does not fit a protocol-valid grid", Open3DPCRejection.NoProtocolValidGrid, 5)
                 continue
             }
 
@@ -593,7 +618,7 @@ internal object LatticeSampler {
                     continue
                 }
                 val markerCandidates = CORNERS.filter { cornerBlockScore(it, horizontalModule, verticalModule) >= 0.88 }
-                if (markerCandidates.size != 1 || markerCandidates[0].id != measuredMarker.id) {
+                if (markerCandidates.size != 1 || (shapes == null && markerCandidates[0].id != measuredMarker?.id)) {
                     recordRejection("corner marker does not agree with measured frame scale", Open3DPCRejection.MarkerDisagreesWithScale, 5)
                     continue
                 }
@@ -668,7 +693,7 @@ internal object LatticeSampler {
                 candidates += SampledMatrix(
                     sampled, rows, columns, frameScore, horizontalModule, verticalModule, markerScore, quietScore, lowestConfidence,
                     StructuralDiagnostics(interiorBackground, horizontalThickness, verticalThickness, moduleAspectRatio, markerScore), structuralScore,
-                    scaleError(rows, columns), edgeMeasured,
+                    hintedErrors[rows to columns] ?: scaleError(rows, columns), edgeMeasured || shapes != null,
                 )
             }
         }

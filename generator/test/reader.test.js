@@ -159,6 +159,36 @@ test('glare does not make a row of dark cells longer', () => {
   assert.ok(read >= 40, `${read} of 81 read`);
 });
 
+test('the shapes a session accepts give the module, so glare cannot change the shape', () => {
+  // Told the shape, the reader takes the module from the frame itself: its outside and its opening move
+  // apart under glare by the same amount, so their mean does not. Without the hint the same frames come
+  // out as a longer code or as nothing.
+  const codes = [['1'.repeat(14), 2, 11], ['1'.repeat(14), 3, 7], [bitsFromInteger(16383, 14), 2, 9], [bitsFromInteger(9999, 14), 4, 5]];
+  let plain = 0;
+  let hinted = 0;
+  for (const [payload, h, w] of codes) for (const scale of [5, 7, 10]) for (const radius of [1, 2, 3]) for (const lift of [40, 80, 110]) {
+    const frame = drawn(payload, h, w, { scale }).glared(radius, lift).frame();
+    const readings = new Open3DPCReader({ geometries: [[h, w]] }).read(frame);
+    for (const r of readings) assert.deepEqual([r.bits, r.rows, r.columns], [payload, h, w], `${h}×${w} at ${scale}, glare ${radius}/${lift}`);
+    hinted += readings.length > 0;
+    plain += new Open3DPCReader().read(frame).some((r) => r.bits === payload && r.rows === h && r.columns === w);
+  }
+  assert.ok(hinted >= plain + 10, `${hinted} read with the shape, ${plain} without`);
+  assert.ok(hinted >= 80, `${hinted} of 108 read with the shape`);
+});
+
+test('a shape the code does not have is never forced on it', () => {
+  // A shape one row or column off is the likeliest wrong guess: told only that one, the reader reads nothing.
+  for (const [payload, h, w] of [[bitsFromInteger(9999, 14), 4, 5], [bitsFromInteger(16383, 14), 2, 9], ['1'.repeat(14), 3, 7], [bitsFromInteger(4242, 14), 4, 6]]) {
+    for (const [dh, dw] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (const scale of [5, 8]) for (const [radius, lift] of [[0, 0], [2, 80], [3, 110]]) {
+      let picture = drawn(payload, h, w, { scale });
+      if (radius) picture = picture.glared(radius, lift);
+      const readings = new Open3DPCReader({ geometries: [[h + dh, w + dw]] }).read(picture.posed({ roll: 20, yaw: 15 }).frame());
+      assert.deepEqual(readings, [], `${h}×${w} told ${h + dh}×${w + dw} at ${scale}, glare ${radius}/${lift}`);
+    }
+  }
+});
+
 test('options refuse other lengths and shapes; the region bounds the search', () => {
   const frame = fixture('number-9999-6x4').posed({ roll: 8 }).frame();
   const count = (options, roi) => new Open3DPCReader(options).read(frame, roi).length;

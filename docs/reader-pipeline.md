@@ -139,6 +139,19 @@ and shrinks with it.
 CRC-5 floor of 10, so without this every quarter-turned code is discarded
 before rotation normalization ever runs.
 
+**When the session names its shapes** (`geometries`), the hypotheses are those shapes, each also
+turned a quarter, and nothing else; the estimate is not used. Each shape gives its own module from the
+frame: glare that thins the frame shrinks the outside and widens the opening by the same amount, so
+`(width + opening) / (2W + 3)` holds still where a module measured from a run of material comes out
+short. A shape is kept only while that module, across and down, agrees within 35 % (perspective) and
+stays near the measured one: within 12 % of a module measured between two edges of one kind, or 0.9 to
+1.6 times one measured from a run of material, since glare only shortens those. A shape one row too
+many gives a module shorter than glare explains, so the hint never forces a code into a shape it does
+not have; the checksum still decides. The marker must still be the only one at the shape's module, but
+need not have been found at the measured one. In the glare sweep of `generator/test/reader.test.js` this
+reads about a tenth more codes with no wrong read, and a code told a shape one row or column off reads
+as nothing.
+
 ## 9. Per-hypothesis scoring
 
 For each candidate geometry the module is `width / (W + 2)` exactly, derived from

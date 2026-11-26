@@ -52,6 +52,21 @@ struct Grey {
         }
     }
 
+    /// A bright screen or glare: a box blur `radius` pixels wide, lifted by `lift`. Dark parts come out thinner.
+    func glared(radius: Int, lift: Int) -> Grey {
+        var out = self
+        for y in 0..<height {
+            for x in 0..<width {
+                var total = 0, count = 0
+                for sy in max(0, y - radius)...min(height - 1, y + radius) {
+                    for sx in max(0, x - radius)...min(width - 1, x + radius) { total += Int(pixels[sy * width + sx]); count += 1 }
+                }
+                out.pixels[y * width + x] = UInt8(min(255, (total + count / 2) / count + lift))
+            }
+        }
+        return out
+    }
+
     mutating func fill(_ x: Int, _ y: Int, _ w: Int, _ h: Int, _ value: UInt8) {
         for row in y..<(y + h) { for column in x..<(x + w) { pixels[row * width + column] = value } }
     }

@@ -602,6 +602,47 @@ function singleCornerStep(width, height, steps, isMaterial) {
   return runs[3] >= 0.03 && runs[3] >= runs[2] * 1.6;
 }
 
+/** Accepted shapes as `[rows, columns]`, each also turned a quarter: the picture may hold the code on its side. */
+function shapeSet(geometries) {
+  const shapes = new Map();
+  for (const [h, w] of geometries) for (const [rows, columns] of [[h, w], [w, h]]) shapes.set(`${rows}x${columns}`, [rows, columns]);
+  return [...shapes.values()];
+}
+
+/** How far the module a shape's frame gives across may differ from the one it gives down: perspective. */
+const HINTED_ASPECT_LIMIT = 0.35;
+/** How far it may differ from a module measured between two edges of one kind, which glare does not move. */
+const HINTED_EDGE_LIMIT = 0.12;
+/** Glare only thins material, so a module measured from a run of it is short, never long: the range allowed. */
+const HINTED_RUN_RANGE = [0.9, 1.6];
+
+/**
+ * The accepted shapes this frame can be, each at the module its own frame gives. Glare that thins the
+ * frame shrinks the outside and widens the opening by the same amount, so their mean, (W + 1.5) modules,
+ * holds still: the module does not depend on a measurement glare can move. A shape is kept while the
+ * module it gives across and down agree and stay near what was measured, so the hint never forces a
+ * picture into a shape it does not have: a shape one row too many gives a module shorter than any glare
+ * explains. The checksum still decides.
+ */
+function hintedGeometries(shapes, width, height, openWidth, openHeight, mx, my, edgeMeasured) {
+  const geometries = [];
+  for (const [rows, columns] of shapes) {
+    const across = (width + openWidth) / (2 * columns + 3);
+    const down = (height + openHeight) / (2 * rows + 3);
+    const aspect = abs(across / down - 1);
+    const ratios = [across / mx, down / my];
+    const agrees = edgeMeasured
+      ? ratios.every((ratio) => abs(ratio - 1) <= HINTED_EDGE_LIMIT)
+      : ratios.every((ratio) => ratio >= HINTED_RUN_RANGE[0] && ratio <= HINTED_RUN_RANGE[1]);
+    const hm = width / (columns + 2);
+    const vm = height / (rows + 2);
+    if (min(hm, vm) < 2.5 || aspect > HINTED_ASPECT_LIMIT || !agrees) continue;
+    const scaleError = edgeMeasured ? max(...ratios.map((ratio) => abs(ratio - 1))) : aspect;
+    geometries.push([rows, columns, hm, vm, scaleError]);
+  }
+  return geometries.sort((a, b) => a[4] - b[4]);
+}
+
 /** The material ring inside the proposal's neighbourhood, innermost sound ring first. */
 function refinedOuterFrame(image) {
   const { width, height } = image;
@@ -732,7 +773,7 @@ function samplingPriority(result) {
   return (result.physical ? 10000 : 0) + (result.sampled ? 1000 : 0) + (result.measured ? 100 : 0) + (result.markerScore ?? 0);
 }
 
-function sampleCore(image) {
+function sampleCore(image, shapes = null) {
   const { width, height } = image;
   const shortestSide = min(width, height);
   const failure = { sampled: null, rejection: 'rectified frame too small', rank: 0, measured: false, markerScore: null, physical: false };
@@ -888,15 +929,17 @@ function sampleCore(image) {
     };
     const markers = (hm, vm) => CORNERS.filter((corner) => blockScore(corner, hm, vm) >= 0.88);
     const measuredMarkers = markers(mx, my);
-    if (measuredMarkers.length !== 1) {
+    // With the shapes known, each one is tried at the module its own frame gives, so a module measured
+    // wrong under glare cannot reject the code here.
+    if (measuredMarkers.length !== 1 && !shapes) {
       diagnose(true, null);
       reject(measuredMarkers.length ? 'ambiguous frame-attached corner markers' : 'no unique frame-attached marker', 3);
       continue;
     }
-    diagnose(true, blockScore(measuredMarkers[0], mx, my));
+    diagnose(true, measuredMarkers.length === 1 ? blockScore(measuredMarkers[0], mx, my) : null);
 
-    const geometries = [];
-    for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+    const geometries = shapes ? hintedGeometries(shapes, width, height, openWidth, openHeight, mx, my, edgeMeasured) : [];
+    if (!shapes) for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
       const rows = round(openHeight / my) - 1 + dr;
       const columns = round(openWidth / mx) - 1 + dc;
       if (!isValidGeometry(rows, columns) && !isValidGeometry(columns, rows)) continue;
@@ -906,11 +949,11 @@ function sampleCore(image) {
       if (min(hm, vm) < 2.5 || scaleError > 0.20) continue;
       geometries.push([rows, columns, hm, vm, scaleError]);
     }
-    if (!geometries.length) { reject('frame scale does not fit a protocol-valid grid', 5); continue; }
+    if (!geometries.length) { reject(shapes ? 'frame fits none of the accepted shapes' : 'frame scale does not fit a protocol-valid grid', 5); continue; }
 
     for (const [rows, columns, hm, vm, scaleError] of geometries) {
       const found = markers(hm, vm);
-      if (found.length !== 1 || found[0].id !== measuredMarkers[0].id) { reject('corner marker does not agree with measured frame scale', 5); continue; }
+      if (found.length !== 1 || (!shapes && found[0].id !== measuredMarkers[0].id)) { reject('corner marker does not agree with measured frame scale', 5); continue; }
       const marker = found[0];
       const markerScore = blockScore(marker, hm, vm);
       const markerRow = marker.y > 0 ? 0 : rows - 1;
@@ -963,7 +1006,7 @@ function sampleCore(image) {
         matrix, rows, columns, frameScore, markerScore, confidence,
         score: 0.45 * frameScore + 0.25 * markerScore + 0.20 * quietScore + 0.10 * confidence,
         scaleError,
-        edgeMeasured,
+        edgeMeasured: edgeMeasured || shapes !== null,
       });
     }
   }
@@ -981,19 +1024,19 @@ function sampleCore(image) {
   return accepted(best);
 }
 
-function sample(image) {
-  const raw = sampleCore(image);
+function sample(image, shapes) {
+  const raw = sampleCore(image, shapes);
   const refined = refinedOuterFrame(image);
   if (!refined) return raw;
-  const registered = sampleCore(refined);
+  const registered = sampleCore(refined, shapes);
   return (registered.physical || !raw.physical) && registered.measured ? { ...registered, crop: refined } : raw;
 }
 
 /** Brightness first; hue is a second attempt, selected by outcome and never by a statistic. */
-function sampleOnEitherAxis(image) {
-  const first = sample(image);
+function sampleOnEitherAxis(image, shapes = null) {
+  const first = sample(image, shapes);
   if (first.sampled) return first;
-  const chromatic = sample(new Raster(image.bytes, image.width, image.height, true));
+  const chromatic = sample(new Raster(image.bytes, image.width, image.height, true), shapes);
   return samplingPriority(chromatic) > samplingPriority(first) ? chromatic : first;
 }
 
@@ -1003,7 +1046,7 @@ function judged({ sampled, rejection }) {
 }
 
 /** The verdict on one picture that is already the code and nothing else, upright or turned. */
-export const analyzeRaster = (raster) => judged(sampleOnEitherAxis(raster));
+export const analyzeRaster = (raster, shapes = null) => judged(sampleOnEitherAxis(raster, shapes && shapeSet(shapes)));
 
 // ---------------------------------------------------------------- one frame
 
@@ -1086,6 +1129,7 @@ export class Open3DPCReader {
   constructor({ payloadLengths = null, geometries = null } = {}) {
     this.payloadLengths = payloadLengths && new Set(payloadLengths);
     this.geometries = geometries && new Set(geometries.map(([rows, columns]) => `${rows}x${columns}`));
+    this.shapes = geometries && shapeSet(geometries);
     this.coarse = new ContourQuads({ minimumSize: 0.045, maximumObservations: 48, quadratureTolerance: 35, radiusDivisor: 20, globalPass: false });
     this.second = new ContourQuads({ minimumSize: 0.06, maximumObservations: 5, quadratureTolerance: 18, radiusDivisor: 9, globalPass: true });
     this.frameNumber = 0;
@@ -1167,7 +1211,7 @@ export class Open3DPCReader {
   register(frame, quad) {
     const corners = expanded(quad);
     const image = preflight(frame, quad) && rectify(frame, corners);
-    return { quad, corners, image, sampling: image ? sampleOnEitherAxis(image) : null };
+    return { quad, corners, image, sampling: image ? sampleOnEitherAxis(image, this.shapes) : null };
   }
 }
 

@@ -28,6 +28,8 @@ internal data class Open3DPCGates(
     val requireMarkerQuietBand: Boolean = true,
     val requireModuleQuietBands: Boolean = true,
     val requireUniqueCornerStep: Boolean = true,
+    /** The shapes a session accepts, each also turned a quarter; null for any. See [LatticeSampler]. */
+    val shapes: List<Pair<Int, Int>>? = null,
 ) {
     companion object {
         val Strict = Open3DPCGates()

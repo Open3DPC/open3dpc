@@ -48,11 +48,16 @@ public final class Open3DPCReader {
 
     public let options: Options
     private let decoder = Open3DPCFrameDecoder()
+    private var gates = Open3DPCValidationGates.strict
     private lazy var context = CIContext(options: [.cacheIntermediates: false])
 
     public init(options: Options = .init()) {
         self.options = options
         decoder.accepts = { [options] in Self.accepts($0, options) }
+        // The accepted shapes reach the sampler too: each is tried at the module its own frame gives.
+        gates.shapes = options.geometries.map { accepted in
+            Array(Set(accepted.flatMap { [$0, Open3DPC.Geometry(height: $0.width, width: $0.height)] }))
+        }
     }
 
     /// Reads a camera frame.
@@ -66,7 +71,7 @@ public final class Open3DPCReader {
         case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange, kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange: break
         default: return []
         }
-        return decoder.analyze(pixelBuffer: pixelBuffer, regionOfInterest: regionOfInterest).compactMap { observation in
+        return decoder.analyze(pixelBuffer: pixelBuffer, regionOfInterest: regionOfInterest, validationGates: gates).compactMap { observation in
             guard let code = observation.physical, accepts(code) else { return nil }
             return Open3DPCReading(
                 payload: code.payload, geometry: code.geometry, corners: observation.corners,
