@@ -1,4 +1,4 @@
-package io.github.romanaerl.open3dpc
+package org.open3dpc
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.int

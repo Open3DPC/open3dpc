@@ -16,7 +16,7 @@ and add the jar to your app, or include the build in your `settings.gradle.kts`:
 ```kotlin
 includeBuild("path/to/open3dpc/kotlin")
 // in the app module
-dependencies { implementation("io.github.romanaerl:open3dpc:0.1.0-SNAPSHOT") }
+dependencies { implementation("org.open3dpc:open3dpc:0.1.0-SNAPSHOT") }
 ```
 
 `fromYuv420`, the reader and the rest use no Java API newer than 11; the app module needs

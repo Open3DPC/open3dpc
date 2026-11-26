@@ -1,6 +1,6 @@
 // Copyright 2026 Roman Simonov. Licensed under the Apache License, Version 2.0.
 
-package io.github.romanaerl.open3dpc
+package org.open3dpc
 
 /**
  * A code found in one frame. Valid by its checksum; confirm it with [Open3DPCStabilizer] before acting.

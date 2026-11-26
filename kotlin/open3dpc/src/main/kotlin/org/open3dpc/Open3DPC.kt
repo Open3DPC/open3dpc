@@ -1,6 +1,6 @@
 // Copyright 2026 Roman Simonov. Licensed under the Apache License, Version 2.0.
 
-package io.github.romanaerl.open3dpc
+package org.open3dpc
 
 /** The physical layer of spec/v2.md §§4–6 and 9 on text matrices: rows of `0`, `1` and one `O`, the orientation feature. */
 object Open3DPC {

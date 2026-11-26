@@ -1,6 +1,6 @@
 // Copyright 2026 Roman Simonov. Licensed under the Apache License, Version 2.0.
 
-package io.github.romanaerl.open3dpc
+package org.open3dpc
 
 import kotlin.math.abs
 import kotlin.math.acos

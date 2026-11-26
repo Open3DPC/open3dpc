@@ -3,7 +3,7 @@ plugins {
     `java-library`
 }
 
-group = "io.github.romanaerl"
+group = "org.open3dpc"
 version = "0.1.0-SNAPSHOT"
 
 // Java 11 bytecode, no dependencies but the Kotlin standard library: usable from Android and the JVM.

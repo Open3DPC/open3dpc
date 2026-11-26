@@ -1,6 +1,6 @@
 // Copyright 2026 Roman Simonov. Licensed under the Apache License, Version 2.0.
 
-package io.github.romanaerl.open3dpc
+package org.open3dpc
 
 internal class Sweep(var decoded: Int = 0, var total: Int = 0, var wrong: Int = 0) {
     val rejections = sortedMapOf<String, Int>()

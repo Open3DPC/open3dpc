@@ -17,11 +17,11 @@ import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import io.github.romanaerl.open3dpc.FrameRect
-import io.github.romanaerl.open3dpc.Open3DPCFrame
-import io.github.romanaerl.open3dpc.Open3DPCReader
-import io.github.romanaerl.open3dpc.Open3DPCReading
-import io.github.romanaerl.open3dpc.Open3DPCStabilizer
+import org.open3dpc.FrameRect
+import org.open3dpc.Open3DPCFrame
+import org.open3dpc.Open3DPCReader
+import org.open3dpc.Open3DPCReading
+import org.open3dpc.Open3DPCStabilizer
 import java.util.concurrent.Executors
 
 /**
