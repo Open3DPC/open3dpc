@@ -61,6 +61,10 @@ What has to be right:
 | A copy before `image.close()` | `fromYuv420` copies, so the image can be closed at once and ML Kit can run beside it |
 | `LowLightTorchPolicy` | In the dark there is no contrast |
 
+`payloadLengths` and `geometries` decide what this session reads: the lengths in bits and the shapes,
+`Open3DPCGeometry(rows, columns)`. Both default to any; set them to the codes you print
+([why](../README.md#you-decide-what-a-session-reads)).
+
 `roi` and `corners` are in **buffer** pixels, origin top left, before any display rotation. The example
 maps the viewfinder through `PreviewView.getSensorToViewTransform()` and
 `ImageInfo.getSensorToBufferTransformMatrix()`. Do not rotate the frame: the code carries its own

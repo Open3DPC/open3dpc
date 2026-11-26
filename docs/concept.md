@@ -119,7 +119,8 @@ readers in this repository let you fix the lengths and the shapes you accept.
 Only bits, and how many there are. The count decides the meaning: a nine-bit code and
 a fourteen-bit code are different things, and an application lists the lengths it
 understands ([profiles](../spec/profiles.md)). The format itself has no version, type
-or owner field.
+or owner field: Open3DPC is the container, not its contents. A scanner is told, for each session, which
+lengths and shapes it accepts, and ignores the rest.
 
 ## How the phone reads it
 

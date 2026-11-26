@@ -17,7 +17,10 @@ const readings = reader.read(Frame.fromImageData(context.getImageData(0, 0, widt
 readings[0]?.value;                                     // 9999n, a BigInt
 ```
 
-Set `payloadLengths` (and `geometries`, if you print one shape): fewer accepted codes means fewer false reads.
+Set `payloadLengths` and `geometries` for each session: the payload lengths it understands and the shapes it
+accepts, as `[rows, columns]`, for example `{ payloadLengths: [14], geometries: [[4, 6]] }`. Anything else is
+ignored. Fewer accepted codes means fewer false reads
+([why](../README.md#you-decide-what-a-session-reads)).
 
 ## Read a camera
 

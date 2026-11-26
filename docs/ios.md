@@ -57,6 +57,10 @@ What has to be right:
 | A virtual device (triple or dual wide), zoomed to its first switch-over factor | It can focus closer by switching lenses; at zoom 1 it is the ultra-wide lens |
 | `LowLightTorchPolicy` | In the dark there is no contrast. Light the torch below full power |
 
+`Options` decides what this session reads: `payloadLengths` (lengths in bits) and `geometries`
+(`.init(height:width:)`, rows by columns). Both default to any; set them to the codes you print
+([why](../README.md#you-decide-what-a-session-reads)).
+
 `regionOfInterest` and `corners` are normalised with the origin at the **lower left**, as in Vision.
 From a preview layer:
 

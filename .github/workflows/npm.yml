@@ -1,0 +1,23 @@
+# Publishes the npm package `open3dpc` when a tag vX.Y.Z is pushed, through npm's trusted publishing:
+# no token is stored here. Nothing happens until the package is linked to this repository and this
+# workflow on npmjs.com (package settings, Trusted publishing). The tag must match package.json.
+name: npm
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+  id-token: write
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+      - name: The tag is the version in package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm test
+      - run: npm publish --provenance --access public

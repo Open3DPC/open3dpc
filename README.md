@@ -180,7 +180,31 @@ val stabilizer = Open3DPCStabilizer()
 stabilizer.observe(reader.read(frame, viewfinder), nowMs)?.let { println(it.value) }   // 4242
 ```
 
-Accept only the lengths and shapes you print: fewer accepted codes means fewer false reads.
+### You decide what a session reads
+
+Open3DPC defines the container: the frame, the grid, the checksum, and a payload of a known number of
+bits. It does not define what is inside. There is no type, version or owner field; what the bits mean
+is your application's business ([profiles](spec/profiles.md)).
+
+So the container is also your filter. When you start a scanning session you tell the reader which
+payload lengths and which shapes this session accepts, and everything else is ignored before your code
+ever sees it. A shop that prints 14-bit codes as 4 × 6 asks for exactly that; an app that also reads
+24-bit labels on 3 × 10 adds them. Each session can ask for something else.
+
+```js
+new Open3DPCReader({ payloadLengths: [14], geometries: [[4, 6]] })                        // JavaScript
+```
+
+```swift
+Open3DPCReader(options: .init(payloadLengths: [14], geometries: [.init(height: 4, width: 6)]))   // Swift
+```
+
+```kotlin
+Open3DPCReader(payloadLengths = setOf(14), geometries = setOf(Open3DPCGeometry(4, 6)))     // Kotlin
+```
+
+Both default to any. Set them: the fewer codes a session accepts, the less likely a stray pattern passes
+the checksum as one of yours, and a code meant for another app is never mistaken for yours.
 
 ## Ideas
 
