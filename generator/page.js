@@ -8,6 +8,8 @@ let selected = { h: 4, w: 6 };
 let larger = false;
 let current = null;
 
+/** The longest payload this page makes. */
+const MAX_BITS = 99;
 const FIELDS = ['mode', 'value', 'bits', 'nozzle', 'passes', 'module', 'height', 'plate', 'maxWidth', 'maxHeight', 'minCrc'];
 
 function restore() {
@@ -37,12 +39,12 @@ function read() {
   const mode = form.elements.mode.value;
   const text = form.elements.value.value.replace(/\s+/g, '');
   const fixedLength = mode === 'integer' ? number('bits', 'Length', true) ?? 0 : 0;
-  if (text.length > 512) throw new RangeError('The payload is too long.');
-  if (!Number.isInteger(fixedLength) || fixedLength > 512) throw new RangeError('Length must be a whole number of bits, at most 512.');
+  if (text.length > MAX_BITS) throw new RangeError(`The payload is too long: at most ${MAX_BITS} bits.`);
+  if (!Number.isInteger(fixedLength) || fixedLength > MAX_BITS) throw new RangeError(`Length must be a whole number of bits, at most ${MAX_BITS}.`);
   let payload = text;
   if (mode === 'integer') payload = o.bitsFromInteger(text, fixedLength);
   else if (!/^[01]+$/.test(text)) throw new TypeError('Bits are one or more 0 and 1.');
-  if (payload.length > 512) throw new RangeError('This page makes codes up to 512 bits.');
+  if (payload.length > MAX_BITS) throw new RangeError(`This page makes codes up to ${MAX_BITS} bits.`);
 
   const nozzle = number('nozzle', 'Nozzle');
   const passes = Number(form.elements.passes.value);
