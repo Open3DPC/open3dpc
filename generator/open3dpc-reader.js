@@ -824,6 +824,8 @@ function sampleCore(image) {
 
     let mx = horizontal * 2;
     let my = vertical * 2;
+    // Whether the module was measured between two edges of one kind, so that glare cannot have moved it.
+    let edgeMeasured = false;
     const cornerRun = (corner, alongX, across) => {
       const step = max(0.5, shortestSide / 240);
       const side = alongX ? width : height;
@@ -849,7 +851,34 @@ function sampleCore(image) {
     if (blocks[best].least >= medianOther * 1.8 && plausible(blockMx / mx) && plausible(blockMy / my)) {
       mx = 0.9 * blockMx + 0.1 * mx;
       my = 0.9 * blockMy + 0.1 * my;
+      // The frame's inner edge and the feature's far edge both turn material into background, so blur or
+      // glare that moves one moves the other the same way: their distance is M itself. Thickness and the
+      // corner block are runs of material, and glare shrinks both.
+      const corner = CORNERS[best];
+      const featureEdge = (alongX) => {
+        const runs = [];
+        for (const f of [0.3, 0.5, 0.7]) {
+          const run = alongX
+            ? transition(corner.x > 0 ? 0 : width - 1, corner.y > 0 ? vertical + f * my : height - vertical - f * my, corner.x > 0 ? 1 : -1, 0, width * 0.6)
+            : transition(corner.x > 0 ? horizontal + f * mx : width - horizontal - f * mx, corner.y > 0 ? 0 : height - 1, 0, corner.y > 0 ? 1 : -1, height * 0.6);
+          if (run !== null) runs.push(run);
+        }
+        return runs.length >= 2 ? median(runs) : null;
+      };
+      const featureX = featureEdge(true);
+      const featureY = featureEdge(false);
+      const edgeMx = featureX === null ? null : featureX - (corner.x > 0 ? left : right);
+      const edgeMy = featureY === null ? null : featureY - (corner.y > 0 ? top : bottom);
+      if (edgeMx !== null && edgeMy !== null && abs(edgeMx / mx - 1) < 0.3 && abs(edgeMy / my - 1) < 0.3) {
+        mx = edgeMx;
+        my = edgeMy;
+        edgeMeasured = true;
+      }
     }
+    // The opening inside the frame is (W + 1) × (H + 1) modules whatever the blur: both of its edges move
+    // with the material. The whole frame, (W + 2) × (H + 2), grows and shrinks with it.
+    const openWidth = width - left - right;
+    const openHeight = height - top - bottom;
     const span = min(mx, my) * 0.12;
 
     const blockScore = (corner, hm, vm) => {
@@ -868,17 +897,18 @@ function sampleCore(image) {
 
     const geometries = [];
     for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
-      const rows = round(height / my) - 2 + dr;
-      const columns = round(width / mx) - 2 + dc;
+      const rows = round(openHeight / my) - 1 + dr;
+      const columns = round(openWidth / mx) - 1 + dc;
       if (!isValidGeometry(rows, columns) && !isValidGeometry(columns, rows)) continue;
       const hm = width / (columns + 2);
       const vm = height / (rows + 2);
-      if (min(hm, vm) < 2.5 || abs(hm / mx - 1) > 0.20 || abs(vm / my - 1) > 0.20) continue;
-      geometries.push([rows, columns, hm, vm]);
+      const scaleError = max(abs(openWidth / (columns + 1) / mx - 1), abs(openHeight / (rows + 1) / my - 1));
+      if (min(hm, vm) < 2.5 || scaleError > 0.20) continue;
+      geometries.push([rows, columns, hm, vm, scaleError]);
     }
     if (!geometries.length) { reject('frame scale does not fit a protocol-valid grid', 5); continue; }
 
-    for (const [rows, columns, hm, vm] of geometries) {
+    for (const [rows, columns, hm, vm, scaleError] of geometries) {
       const found = markers(hm, vm);
       if (found.length !== 1 || found[0].id !== measuredMarkers[0].id) { reject('corner marker does not agree with measured frame scale', 5); continue; }
       const marker = found[0];
@@ -932,7 +962,8 @@ function sampleCore(image) {
       candidates.push({
         matrix, rows, columns, frameScore, markerScore, confidence,
         score: 0.45 * frameScore + 0.25 * markerScore + 0.20 * quietScore + 0.10 * confidence,
-        scaleError: max(abs(hm / mx - 1), abs(vm / my - 1)),
+        scaleError,
+        edgeMeasured,
       });
     }
   }
@@ -944,7 +975,7 @@ function sampleCore(image) {
   if (runnerUp && (runnerUp.rows !== best.rows || runnerUp.columns !== best.columns) && best.score - runnerUp.score < 0.06 &&
     best.confidence - runnerUp.confidence < CELL_CONFIDENCE_TIE_BREAK) {
     const tied = candidates.filter((c) => best.score - c.score < 0.06).sort((a, b) => a.scaleError - b.scaleError);
-    if (tied[0].scaleError <= SCALE_AGREEMENT && tied[1].scaleError - tied[0].scaleError >= SCALE_SEPARATION) return accepted(tied[0]);
+    if (tied[0].edgeMeasured && tied[0].scaleError <= SCALE_AGREEMENT && tied[1].scaleError - tied[0].scaleError >= SCALE_SEPARATION) return accepted(tied[0]);
     return { ...accepted(best), sampled: null, rejection: `ambiguous geometry ${best.rows}×${best.columns} / ${runnerUp.rows}×${runnerUp.columns}` };
   }
   return accepted(best);

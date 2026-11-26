@@ -31,6 +31,8 @@ internal class SampledMatrix(
     val structuralScore: Double,
     /** How far this lattice's module is from the measured one, on the worse axis. */
     val scaleError: Double,
+    /** Whether the measured module is the distance between two edges of one kind, which glare cannot move. */
+    val edgeMeasured: Boolean,
 ) {
     val detail get() = "grid $rows×$columns · Mx/My ${format1(horizontalModule)}/${format1(verticalModule)} px · frame ${swiftRound(edgeMaterialFraction * 100).toInt()}%"
 }
@@ -58,6 +60,8 @@ internal object LatticeSampler {
     /** When the cells cannot settle a tie, the module measured on the orientation corner (1.5M) may. */
     private const val SCALE_AGREEMENT = 0.08
     private const val SCALE_SEPARATION = 0.04
+    /** Where the rays cross the orientation feature, as fractions of M from the frame's inner edge. */
+    private val FEATURE_RAY_FRACTIONS = doubleArrayOf(0.3, 0.5, 0.7)
 
     /** `analyzeFixture`. */
     fun analyze(raster: Raster, gates: Open3DPCGates = Open3DPCGates.Strict): RasterOutcome {
@@ -459,6 +463,7 @@ internal object LatticeSampler {
 
             var measuredMx = horizontalThickness * 2
             var measuredMy = verticalThickness * 2
+            var edgeMeasured = false
             val squareModuleAspectLimit = 1.12
             val moduleAgreementTolerance = 0.20
             val measuredModuleAspectRatio = max(measuredMx, measuredMy) / min(measuredMx, measuredMy)
@@ -506,7 +511,40 @@ internal object LatticeSampler {
                 val blockWeight = 0.9
                 measuredMx = blockWeight * blockMx + (1 - blockWeight) * measuredMx
                 measuredMy = blockWeight * blockMy + (1 - blockWeight) * measuredMy
+                // The frame's inner edge and the feature's far edge both turn material into background, so blur or
+                // glare that moves one moves the other the same way: their distance is M itself. Thickness and the
+                // corner block are runs of material, and glare shrinks both.
+                val corner = CORNERS[best]
+                fun featureEdge(alongX: Boolean): Double? {
+                    val runs = ArrayList<Double>(3)
+                    for (fraction in FEATURE_RAY_FRACTIONS) {
+                        val run = if (alongX) frameEdgeTransition(
+                            if (corner.xDirection > 0) 0.0 else width - 1,
+                            if (corner.yDirection > 0) verticalThickness + fraction * measuredMy else height - verticalThickness - fraction * measuredMy,
+                            if (corner.xDirection > 0) 1.0 else -1.0, 0.0, width * 0.6,
+                        ) else frameEdgeTransition(
+                            if (corner.xDirection > 0) horizontalThickness + fraction * measuredMx else width - horizontalThickness - fraction * measuredMx,
+                            if (corner.yDirection > 0) 0.0 else height - 1,
+                            0.0, if (corner.yDirection > 0) 1.0 else -1.0, height * 0.6,
+                        )
+                        if (run != null) runs += run
+                    }
+                    return if (runs.size >= 2) median(runs) else null
+                }
+                val featureX = featureEdge(true)
+                val featureY = featureEdge(false)
+                val edgeMx = featureX?.let { it - if (corner.xDirection > 0) leftThickness else rightThickness }
+                val edgeMy = featureY?.let { it - if (corner.yDirection > 0) topThickness else bottomThickness }
+                if (edgeMx != null && edgeMy != null && abs(edgeMx / measuredMx - 1) < 0.3 && abs(edgeMy / measuredMy - 1) < 0.3) {
+                    measuredMx = edgeMx
+                    measuredMy = edgeMy
+                    edgeMeasured = true
+                }
             }
+            // The opening inside the frame is (W + 1) × (H + 1) modules whatever the blur: both of its edges move
+            // with the material. The whole frame, (W + 2) × (H + 2), grows and shrinks with it.
+            val openWidth = width - leftThickness - rightThickness
+            val openHeight = height - topThickness - bottomThickness
             val sampleSpan = min(measuredMx, measuredMy) * 0.12
 
             fun cornerBlockScore(corner: Corner, horizontalModule: Double, verticalModule: Double): Double {
@@ -526,8 +564,10 @@ internal object LatticeSampler {
             diagnostics = StructuralDiagnostics(interiorBackground, horizontalThickness, verticalThickness, measuredModuleAspectRatio, measuredMarkerScore)
             deepestDiagnostics = diagnostics
 
-            val estimatedRows = swiftRound(height / measuredMy).toInt() - 2
-            val estimatedColumns = swiftRound(width / measuredMx).toInt() - 2
+            val estimatedRows = swiftRound(openHeight / measuredMy).toInt() - 1
+            val estimatedColumns = swiftRound(openWidth / measuredMx).toInt() - 1
+            fun scaleError(rows: Int, columns: Int) =
+                max(abs(openWidth / (columns + 1) / measuredMx - 1), abs(openHeight / (rows + 1) / measuredMy - 1))
             val geometries = ArrayList<Pair<Int, Int>>()
             for (rowOffset in -1..1) for (columnOffset in -1..1) {
                 val rows = estimatedRows + rowOffset
@@ -535,9 +575,7 @@ internal object LatticeSampler {
                 if (!validInSomeOrientation(rows, columns)) continue
                 val horizontalModule = width / (columns + 2)
                 val verticalModule = height / (rows + 2)
-                if (min(horizontalModule, verticalModule) < 2.5 ||
-                    abs(horizontalModule / measuredMx - 1) > moduleAgreementTolerance ||
-                    abs(verticalModule / measuredMy - 1) > moduleAgreementTolerance) continue
+                if (min(horizontalModule, verticalModule) < 2.5 || scaleError(rows, columns) > moduleAgreementTolerance) continue
                 geometries += rows to columns
             }
             if (geometries.isEmpty()) {
@@ -630,7 +668,7 @@ internal object LatticeSampler {
                 candidates += SampledMatrix(
                     sampled, rows, columns, frameScore, horizontalModule, verticalModule, markerScore, quietScore, lowestConfidence,
                     StructuralDiagnostics(interiorBackground, horizontalThickness, verticalThickness, moduleAspectRatio, markerScore), structuralScore,
-                    max(abs(horizontalModule / measuredMx - 1), abs(verticalModule / measuredMy - 1)),
+                    scaleError(rows, columns), edgeMeasured,
                 )
             }
         }
@@ -640,7 +678,7 @@ internal object LatticeSampler {
         if (runnerUp != null && (runnerUp.rows != best.rows || runnerUp.columns != best.columns) && best.structuralScore - runnerUp.structuralScore < 0.06) {
             if (best.lowestCellConfidence - runnerUp.lowestCellConfidence < CELL_CONFIDENCE_TIE_BREAK) {
                 val tied = ranked.filter { best.structuralScore - it.structuralScore < 0.06 }.sortedBy { it.scaleError }
-                if (tied[0].scaleError <= SCALE_AGREEMENT && tied[1].scaleError - tied[0].scaleError >= SCALE_SEPARATION)
+                if (tied[0].edgeMeasured && tied[0].scaleError <= SCALE_AGREEMENT && tied[1].scaleError - tied[0].scaleError >= SCALE_SEPARATION)
                     return SamplingResult(listOf(tied[0]), "", Open3DPCRejection.None, tied[0].diagnostics, true)
                 return SamplingResult(emptyList(), "ambiguous geometry hypotheses ${best.rows}×${best.columns} / ${runnerUp.rows}×${runnerUp.columns}",
                     Open3DPCRejection.AmbiguousGeometry, best.diagnostics, true)

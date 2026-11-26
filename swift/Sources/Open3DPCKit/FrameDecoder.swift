@@ -562,12 +562,12 @@ final class Open3DPCFrameDecoder {
         /// columns has to classify background as payload, so this is where it gives itself away —
         /// the structural terms cannot, since surplus background is structurally perfect.
         let lowestCellConfidence: Double
+        /// How far this lattice's module is from the measured one, on the worse axis, both taken across
+        /// the opening inside the frame.
+        let scaleError: Double
+        /// Whether the measured module is the distance between two edges of one kind, which glare cannot move.
+        let edgeMeasured: Bool
         let diagnostics: StructuralDiagnostics
-        /// How far this lattice's module is from the measured one, on the worse axis.
-        var scaleError: Double {
-            guard let marker = diagnostics.attachedMarker else { return .infinity }
-            return max(abs(horizontalModule / marker.horizontalModule - 1), abs(verticalModule / marker.verticalModule - 1))
-        }
         let cellConfidences: [Open3DPCVisualMetrics.CellConfidence]
         let structuralScore: Double
         let samplingGrid: Open3DPCVisualMetrics.SamplingGrid?
@@ -729,10 +729,13 @@ final class Open3DPCFrameDecoder {
 
     /// When the cells cannot settle a tie, the measured module may: the lattice whose module is within
     /// `scaleAgreement` of it, if the next best is at least `scaleSeparation` further off. The module
-    /// is measured on the orientation corner (frame plus feature, 1.5M), so it owes nothing to the
-    /// lattice. A dark row or column from edge to edge has no cell borders to count and needs this.
+    /// is measured on the orientation corner, from the frame's inner edge to the feature's far edge, so
+    /// it owes nothing to the lattice. A dark row or column from edge to edge has no cell borders to
+    /// count and needs this; without that measurement the tie stays a tie.
     static let scaleAgreement = 0.08
     static let scaleSeparation = 0.04
+    /// Where the rays cross the orientation feature, as fractions of M from the frame's inner edge.
+    static let featureRayFractions = [0.3, 0.5, 0.7]
 
     /// How far the leading hypothesis must beat the runner-up on its least confident cell to settle a
     /// structural tie. See docs/reader-pipeline.md, stage 10.
@@ -1448,6 +1451,7 @@ final class Open3DPCFrameDecoder {
             )
             var measuredMx = horizontalThickness * 2
             var measuredMy = verticalThickness * 2
+            var edgeMeasured = false
             let squareModuleAspectLimit = 1.12
             // How far a hypothesis module may sit from the measured one.
             let moduleAgreementTolerance = 0.20
@@ -1518,7 +1522,43 @@ final class Open3DPCFrameDecoder {
                     let blockWeight = 0.9
                     measuredMx = blockWeight * blockMx + (1 - blockWeight) * measuredMx
                     measuredMy = blockWeight * blockMy + (1 - blockWeight) * measuredMy
+                    // The frame's inner edge and the feature's far edge both turn material into
+                    // background, so blur or glare that moves one moves the other the same way: their
+                    // distance is M itself. Thickness and the corner block are runs of material, and
+                    // glare shrinks both.
+                    let corner = corners[best.offset]
+                    func featureEdge(alongX: Bool) -> Double? {
+                        let runs = Self.featureRayFractions.compactMap { fraction -> Double? in
+                            alongX
+                                ? frameEdgeTransition(
+                                    startX: corner.xDirection > 0 ? 0 : width - 1,
+                                    startY: corner.yDirection > 0 ? verticalThickness + fraction * measuredMy : height - verticalThickness - fraction * measuredMy,
+                                    deltaX: corner.xDirection > 0 ? 1 : -1, deltaY: 0, limit: width * 0.6)
+                                : frameEdgeTransition(
+                                    startX: corner.xDirection > 0 ? horizontalThickness + fraction * measuredMx : width - horizontalThickness - fraction * measuredMx,
+                                    startY: corner.yDirection > 0 ? 0 : height - 1,
+                                    deltaX: 0, deltaY: corner.yDirection > 0 ? 1 : -1, limit: height * 0.6)
+                        }
+                        return runs.count >= 2 ? median(runs) : nil
+                    }
+                    if let featureX = featureEdge(alongX: true), let featureY = featureEdge(alongX: false) {
+                        let edgeMx = featureX - (corner.xDirection > 0 ? leftThickness : rightThickness)
+                        let edgeMy = featureY - (corner.yDirection > 0 ? topThickness : bottomThickness)
+                        if abs(edgeMx / measuredMx - 1) < 0.3, abs(edgeMy / measuredMy - 1) < 0.3 {
+                            measuredMx = edgeMx
+                            measuredMy = edgeMy
+                            edgeMeasured = true
+                        }
+                    }
                 }
+            }
+            // The opening inside the frame is (W + 1) × (H + 1) modules whatever the blur: both of its
+            // edges move with the material. The whole frame, (W + 2) × (H + 2), grows and shrinks with it.
+            let openWidth = width - leftThickness - rightThickness
+            let openHeight = height - topThickness - bottomThickness
+            func scaleError(_ geometry: Open3DPC.Geometry) -> Double {
+                max(abs(openWidth / Double(geometry.width + 1) / measuredMx - 1),
+                    abs(openHeight / Double(geometry.height + 1) / measuredMy - 1))
             }
             let sampleSpan = min(measuredMx, measuredMy) * 0.12
 
@@ -1645,8 +1685,8 @@ final class Open3DPCFrameDecoder {
             }
             if !measuredMarkerQuietBandIsClear { deepestDiagnostics = diagnostics }
 
-            let estimatedRows = Int((height / measuredMy).rounded()) - 2
-            let estimatedColumns = Int((width / measuredMx).rounded()) - 2
+            let estimatedRows = Int((openHeight / measuredMy).rounded()) - 1
+            let estimatedColumns = Int((openWidth / measuredMx).rounded()) - 1
             let geometries = (-1...1).flatMap { rowOffset in
                 (-1...1).compactMap { columnOffset -> Open3DPC.Geometry? in
                     let geometry = Open3DPC.Geometry(
@@ -1661,8 +1701,7 @@ final class Open3DPCFrameDecoder {
                     // could run.
                     guard geometry.isValidInSomeOrientation,
                           min(horizontalModule, verticalModule) >= 2.5,
-                          abs(horizontalModule / measuredMx - 1) <= moduleAgreementTolerance,
-                          abs(verticalModule / measuredMy - 1) <= moduleAgreementTolerance else {
+                          scaleError(geometry) <= moduleAgreementTolerance else {
                         return nil
                     }
                     return geometry
@@ -1805,6 +1844,8 @@ final class Open3DPCFrameDecoder {
                     markerScore: markerScore,
                     quietBandScore: quietScore,
                     lowestCellConfidence: lowestConfidence,
+                    scaleError: scaleError(geometry),
+                    edgeMeasured: edgeMeasured,
                     diagnostics: StructuralDiagnostics(
                         interiorBackgroundScore: interiorBackground,
                         horizontalFrameThickness: horizontalThickness,
@@ -1852,7 +1893,7 @@ final class Open3DPCFrameDecoder {
             let separation = best.lowestCellConfidence - runnerUp.lowestCellConfidence
             if separation < Self.cellConfidenceTieBreak {
                 let tied = ranked.filter { best.structuralScore - $0.structuralScore < 0.06 }.sorted { $0.scaleError < $1.scaleError }
-                if tied[0].scaleError <= Self.scaleAgreement,
+                if tied[0].edgeMeasured, tied[0].scaleError <= Self.scaleAgreement,
                    tied[1].scaleError - tied[0].scaleError >= Self.scaleSeparation {
                     return .init(matrices: [tied[0]], rejection: "", diagnostics: tied[0].diagnostics, hasPhysicalSignature: true)
                 }

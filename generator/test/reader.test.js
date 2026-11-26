@@ -17,6 +17,24 @@ class Grey {
     for (let y = 0; y < this.height; y++) for (let x = 0; x < this.width; x++) out[x * this.height + this.height - 1 - y] = this.pixels[y * this.width + x];
     return new Grey(this.height, this.width, out);
   }
+  /** A bright screen or glare: a box blur `radius` pixels wide, lifted by `lift`. Dark parts come out thinner. */
+  glared(radius, lift) {
+    const { width, height, pixels } = this;
+    const out = new Uint8Array(pixels.length);
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      let total = 0;
+      let count = 0;
+      for (let dy = -radius; dy <= radius; dy++) for (let dx = -radius; dx <= radius; dx++) {
+        const sx = x + dx;
+        const sy = y + dy;
+        if (sx < 0 || sy < 0 || sx >= width || sy >= height) continue;
+        total += pixels[sy * width + sx];
+        count++;
+      }
+      out[y * width + x] = Math.min(255, Math.round(total / count + lift));
+    }
+    return new Grey(width, height, out);
+  }
   /** Seen through a pinhole at 3.2 diagonals, on a canvas of `paper`. */
   posed({ yaw = 0, pitch = 0, roll = 0, paper = 255 } = {}) {
     const [a, b, c] = [yaw, pitch, roll].map((d) => (d * Math.PI) / 180);
@@ -125,6 +143,20 @@ test('a data row is not a side of the frame', () => {
     const payload = bitsFromInteger(n, 14);
     assert.equal(analyzeRaster(upright(drawn(payload, h, w, { scale: 24, margin: 0.5 }))).bits, payload, `${n} on ${h}×${w}`);
   }
+});
+
+test('glare does not make a row of dark cells longer', () => {
+  // A row of dark cells from edge to edge has no borders to count: its length comes from the module, and
+  // glare thins every dark run, so a module taken from the thickness of the frame came out short.
+  let read = 0;
+  for (const [payload, h, w] of [['1'.repeat(14), 2, 11], ['1'.repeat(14), 3, 7], [bitsFromInteger(16383, 14), 2, 9]]) {
+    for (const scale of [5, 7, 10]) for (const radius of [1, 2, 3]) for (const lift of [40, 80, 110]) {
+      const readings = new Open3DPCReader().read(drawn(payload, h, w, { scale }).glared(radius, lift).frame());
+      for (const r of readings) assert.deepEqual([r.bits, r.rows, r.columns], [payload, h, w], `${h}×${w} at ${scale}, glare ${radius}/${lift}`);
+      read += readings.length > 0;
+    }
+  }
+  assert.ok(read >= 40, `${read} of 81 read`);
 });
 
 test('options refuse other lengths and shapes; the region bounds the search', () => {

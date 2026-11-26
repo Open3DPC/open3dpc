@@ -115,10 +115,24 @@ normalized frame.
 *Why several rays and a median:* one probe per edge lets the fused orientation
 corner, a rounded corner or a print blemish set the measurement for the whole side.
 
+The module itself is the distance from the frame's inner edge to the feature's far edge, measured
+along three rays across the feature on each axis. Both edges turn material into background, so blur,
+glare or a bright screen moves them the same way and their distance stays `M`. Thickness (`M/2`) and
+the corner block (`1.5M`) are runs of material: glare shrinks them, and a module taken from them came
+out short. When the feature cannot be measured, the module falls back to them.
+
+*Why it matters:* a row of dark cells from edge to edge has no borders to count, so its length comes
+from the module. A short module made such a code longer: under glare `2×11` read as `2×13` and `3×7`
+as `3×9`, and a short CRC let one in four or eight of those through.
+
 ## 8. Geometry hypotheses
 
 Enumerate `H × W` within ±1 of the estimate, keeping a hypothesis when **either
 the observed shape or its transpose** satisfies the protocol's capacity rule.
+
+The estimate is taken across the opening inside the frame, `(W + 1) × (H + 1)` modules, not across
+the whole frame: both edges of the opening move with the material, while the frame's outside grows
+and shrinks with it.
 
 *Why the transpose:* capacity is derived from *normalized* height. A physical
 `3×5` seen portrait enumerates as `5×3`, whose payload capacity of 8 fails the
@@ -164,8 +178,9 @@ Ambiguity is still reported whenever the cells cannot separate them either.
 
 *When the cells cannot settle it either*, the measured module may: the lattice whose module is within 8 % of
 it wins, if the next best is at least 4 points further off. The module is measured on the orientation corner
-(frame plus feature, `1.5M`), independently of any lattice. A dark row or column from edge to edge has no cell
-borders to count and needs this.
+(from the frame's inner edge to the feature's far edge, stage 7), independently of any lattice. A dark row or
+column from edge to edge has no cell borders to count and needs this. When the feature could not be measured and
+the module is only the frame's thickness, the tie stays a tie: glare moves that measurement.
 
 ## 11. Protocol validation
 
