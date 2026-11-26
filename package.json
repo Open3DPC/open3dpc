@@ -4,23 +4,47 @@
   "description": "A tiny two-color code made for 3D printing: make codes (SVG, PNG, STL) and read them from camera frames or photos. No dependencies.",
   "type": "module",
   "exports": {
-    ".": "./generator/open3dpc.js",
-    "./reader": "./generator/open3dpc-reader.js",
+    ".": {
+      "types": "./generator/open3dpc.d.ts",
+      "default": "./generator/open3dpc.js"
+    },
+    "./reader": {
+      "types": "./generator/open3dpc-reader.d.ts",
+      "default": "./generator/open3dpc-reader.js"
+    },
     "./package.json": "./package.json"
   },
+  "types": "./generator/open3dpc.d.ts",
   "files": [
     "generator/open3dpc.js",
+    "generator/open3dpc.d.ts",
     "generator/open3dpc-reader.js",
+    "generator/open3dpc-reader.d.ts",
     "NOTICE"
   ],
   "sideEffects": false,
-  "engines": { "node": ">=18" },
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "test": "cd generator && npm test"
   },
-  "keywords": ["open3dpc", "3d-printing", "fdm", "barcode", "2d-code", "qr-alternative", "stl", "scanner", "reader"],
+  "keywords": [
+    "open3dpc",
+    "3d-printing",
+    "fdm",
+    "barcode",
+    "2d-code",
+    "qr-alternative",
+    "stl",
+    "scanner",
+    "reader"
+  ],
   "homepage": "https://open3dpc.org",
-  "repository": { "type": "git", "url": "git+https://github.com/Open3DPC/open3dpc.git" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Open3DPC/open3dpc.git"
+  },
   "bugs": "https://github.com/Open3DPC/open3dpc/issues",
   "author": "Roman Simonov (https://romanaerl.github.io)",
   "license": "Apache-2.0"
