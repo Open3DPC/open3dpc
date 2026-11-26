@@ -114,10 +114,10 @@ the thinnest line, the code height and the plate under it, pick a shape from the
 
 The same page is in [generator/](generator/) and runs offline: `cd generator && python3 -m http.server`.
 
-**From JavaScript**, with no dependencies:
+**From JavaScript**, with no dependencies: `npm install open3dpc`, or copy [generator/open3dpc.js](generator/open3dpc.js).
 
 ```js
-import { encode, bitsFromInteger, stl, backingStl, svg } from './generator/open3dpc.js';
+import { encode, bitsFromInteger, stl, backingStl, svg } from 'open3dpc';
 
 const code = encode(bitsFromInteger(4242, 14), 4, 6);   // 14 bits, 4 rows × 6 columns
 stl(code, { materialHeight: 0.6 });                     // Uint8Array: the dark material
@@ -125,9 +125,10 @@ backingStl(code, { plate: 1 });                         // Uint8Array: the light
 svg(code, { quietZone: true });                         // exact, in millimetres
 ```
 
-**From the command line**, with [`open3dpc-cli`](cli/):
+**From the command line**, with [`open3dpc-cli`](cli/) and Node.js 20.9 or later:
 
 ```bash
+npm install -g open3dpc-cli
 open3dpc make 4242 --length 14 --shape 4x6   # open3dpc-4242-4x6.stl and -backing.stl
 ```
 
@@ -145,8 +146,8 @@ below.
 open3dpc scan ~/Pictures/parts --shape 4x6
 ```
 
-One line per code, or `--json`. The command is [`open3dpc-cli`](cli/); it is not on npm yet, so for now
-run it from this repository: `cd cli && npm install --no-save .. sharp && ./cli.js --help`.
+One line per code, or `--json`. The command is [`open3dpc-cli`](cli/): `npm install -g open3dpc-cli`, or
+`npx open3dpc-cli scan photo.jpg` without installing.
 
 ## Build it into your app
 
@@ -169,7 +170,7 @@ use the reader it describes, accept only 14-bit codes, and call onCode(number) w
 **Or write it.** JavaScript:
 
 ```js
-import { Frame, Open3DPCReader, Open3DPCStabilizer } from './open3dpc-reader.js';
+import { Frame, Open3DPCReader, Open3DPCStabilizer } from 'open3dpc/reader';
 
 const reader = new Open3DPCReader({ payloadLengths: [14] });
 const stabilizer = new Open3DPCStabilizer();
@@ -249,7 +250,9 @@ The format is v2 and settled. It is used in the [Enforso](https://enforso.com) a
 printed stickers; the Swift and Kotlin readers were extracted from them. Every part passes the test
 vectors, and the generator's matrix, SVG and STL match, byte for byte, the generator it was ported from.
 
-The libraries are young and not yet released to a package registry, and their API may change. The
+The JavaScript library and the command are on npm as [`open3dpc`](https://www.npmjs.com/package/open3dpc) and
+[`open3dpc-cli`](https://www.npmjs.com/package/open3dpc-cli); the Swift package is taken from this repository,
+and the Kotlin library is not yet in a package registry. The libraries are young, and their API may change. The
 readers refuse some codes on purpose and have [known limits](docs/reader-pipeline.md#known-limits-of-the-readers).
 Reading distance and success rate across printers and phones are
 [not yet published](docs/concept.md#what-has-not-been-measured). If you print and scan codes, please

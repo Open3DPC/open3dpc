@@ -6,6 +6,7 @@ permission for the camera.
 
 The reader under it is one JavaScript module with no dependencies,
 [`open3dpc-reader.js`](../generator/open3dpc-reader.js); it imports `open3dpc.js` beside it and also runs in Node.
+Install it with `npm install open3dpc` and import `open3dpc/reader`, or copy the two files.
 
 ## Read a picture
 
