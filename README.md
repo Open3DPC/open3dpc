@@ -50,7 +50,7 @@ reader and the printed object stays easy to make:
 Every closed line below is one loop of a 0.4 mm nozzle: it starts, goes round and stops, and every start
 and stop is a chance for a blob or a string. Same number, same 0.8 mm thinnest feature, one scale:
 
-<p align="center"><img src="docs/img/nozzle-loops.svg" width="640" alt="The path of a 0.4 mm nozzle for 9999: 59 loops in the QR code, 12 in Open3DPC"></p>
+<p align="center"><img src="docs/img/nozzle-loops.svg" width="640" alt="The path of a 0.4 mm nozzle for the encoded payload 9999: 59 loops in the QR code, 12 in Open3DPC"></p>
 
 The same in a slicer, on 20 × 20 mm tiles with a 0.8 mm thinnest feature, two lines of a 0.4 mm nozzle.
 On the left the QR code, short loops around every single square; in the middle Open3DPC 5 × 5 stretched

@@ -164,9 +164,9 @@ const number = (n, bits, h, w) => encode(n.toString(2).padStart(bits, '0'), h, w
       g = erode(erode(g));
     }
     const y0 = 116 - h;
-    return { total, svg: `<g transform="translate(${x0} ${y0})"><rect width="${w}" height="${h}" rx="3" fill="#18245f"/><path fill="none" stroke="#e6e8ea" stroke-width="1.55" stroke-linejoin="round" d="${d}"/></g><text x="${x0}" y="132" font-size="9" font-weight="700" fill="#15191a">${total} loops</text><text x="${x0}" y="144" font-size="6.5" fill="#5d6562">${name}, ${size}</text>` };
+    return { total, svg: `<g transform="translate(${x0} ${y0})"><rect width="${w}" height="${h}" rx="3" fill="#18245f"/><path fill="none" stroke="#e6e8ea" stroke-width="1.55" stroke-linejoin="round" d="${d}"/></g><text x="${x0}" y="132" font-size="9" font-weight="700" fill="#15191a">${total} loops</text><text x="${x0}" y="144" font-size="6.5" fill="#5d6562">${name}, ${size}</text><text x="${x0}" y="155" font-size="6.5" font-weight="600" fill="#15191a">Encoded payload: 9999 (integer)</text>` };
   };
   const a = draw(qr, 4, 8, 'QR version 1', '23.2 × 23.2 mm');
   const b = draw(darkGrid(encode('10011100001111', 4, 6)), 1, 140, 'Open3DPC 4 × 6', '14.4 × 11.2 mm');
-  out('nozzle-loops.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 152" width="756" height="456" ${font} role="img" aria-label="The path of a 0.4 mm nozzle for 9999: ${a.total} loops in the QR code, ${b.total} in Open3DPC"><rect width="252" height="152" rx="6" fill="#ffffff"/>${a.svg}${b.svg}</svg>`);
+  out('nozzle-loops.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 252 162" width="756" height="486" ${font} role="img" aria-label="The path of a 0.4 mm nozzle for 9999: ${a.total} loops in the QR code, ${b.total} in Open3DPC"><rect width="252" height="162" rx="6" fill="#ffffff"/>${a.svg}${b.svg}</svg>`);
 }
