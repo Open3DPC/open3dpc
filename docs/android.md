@@ -5,19 +5,15 @@ Android classes. It is compiled to Java 11 bytecode and works on Android and on 
 
 ## 1. Add the library
 
-It is not published to a Maven repository yet. Either build it:
-
-```bash
-cd kotlin && ./gradlew :open3dpc:jar      # kotlin/open3dpc/build/libs/
-```
-
-and add the jar to your app, or include the build in your `settings.gradle.kts`:
+From Maven Central:
 
 ```kotlin
-includeBuild("path/to/open3dpc/kotlin")
-// in the app module
-dependencies { implementation("org.open3dpc:open3dpc:0.1.0-SNAPSHOT") }
+dependencies { implementation("org.open3dpc:open3dpc:VERSION") }   // the latest release on Maven Central
 ```
+
+Or build it from this repository: `cd kotlin && ./gradlew :open3dpc:jar` (into `kotlin/open3dpc/build/libs/`), or
+`includeBuild("path/to/open3dpc/kotlin")` in your `settings.gradle.kts`. Its version is the one in the root
+`package.json`.
 
 `fromYuv420`, the reader and the rest use no Java API newer than 11; the app module needs
 `compileOptions` of 11 or higher.

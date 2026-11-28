@@ -1,0 +1,31 @@
+# Uploads the Kotlin library org.open3dpc:open3dpc to Maven Central when a tag vX.Y.Z is pushed. The
+# deployment is validated and then waits on central.sonatype.com until the maintainer presses Publish there,
+# as npm.yml stages its packages. The tag must match the root package.json, which is the library's version.
+# Secrets: MAVEN_CENTRAL_USERNAME and MAVEN_CENTRAL_PASSWORD (a Central Portal user token), SIGNING_KEY (the
+# armored secret key) and SIGNING_PASSWORD.
+name: Maven Central
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - name: The tag is the version in package.json
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: ./gradlew --no-daemon :open3dpc:build
+        working-directory: kotlin
+      - run: ./gradlew --no-daemon --no-configuration-cache :open3dpc:publishToMavenCentral
+        working-directory: kotlin
+        env:
+          ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_KEY }}
+          ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_PASSWORD }}
