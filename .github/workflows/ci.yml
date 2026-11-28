@@ -36,8 +36,3 @@ jobs:
           java-version: 21
       - run: ./gradlew --no-daemon :open3dpc:build
         working-directory: kotlin
-  swift:
-    runs-on: macos-15
-    steps:
-      - uses: actions/checkout@v5
-      - run: swift test

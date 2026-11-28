@@ -1,0 +1,18 @@
+name: Swift
+# On macOS, whose minute costs ten Linux ones: only when what the Swift tests build or read changes —
+# the package, its sources and tests, and the shared fixtures and vectors under spec/.
+on:
+  push:
+    branches: [main]
+    paths: ['swift/**', 'Package.swift', 'spec/**', '.github/workflows/swift.yml']
+  pull_request:
+    paths: ['swift/**', 'Package.swift', 'spec/**', '.github/workflows/swift.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  swift:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v5
+      - run: swift test
